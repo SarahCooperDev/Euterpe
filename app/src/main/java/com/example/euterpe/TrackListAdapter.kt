@@ -5,11 +5,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.euterpe.model.TempTrack
+import com.example.euterpe.model.Track
 
 class TrackListAdapter: RecyclerView.Adapter<TextItemViewHolder>() {
 
-    var data =  listOf<TempTrack>()
+    var data =  listOf<Track>()
         set(value) {
             field = value
             notifyDataSetChanged()
