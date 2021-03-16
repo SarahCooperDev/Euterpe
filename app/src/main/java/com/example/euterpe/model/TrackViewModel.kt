@@ -1,18 +1,16 @@
-package com.example.euterpe
+package com.example.euterpe.model
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 
 class TrackViewModel : ViewModel(){
 
-    lateinit var trackList: MutableList<Track>
+    lateinit var trackList: MutableList<TempTrack>
 
     private fun resetList() {
-        var track1 = Track("When the End Comes", "Anime")
-        var track2 = Track("Zombies", "Bad Wolves")
-        var track3 = Track("Storm the Sorrow", "Epica")
+        var track1 = TempTrack("When the End Comes", "Anime")
+        var track2 = TempTrack("Zombies", "Bad Wolves")
+        var track3 = TempTrack("Storm the Sorrow", "Epica")
 
         trackList = mutableListOf(
             track1, track2, track3)

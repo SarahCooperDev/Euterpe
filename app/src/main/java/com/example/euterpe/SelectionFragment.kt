@@ -13,7 +13,11 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
+import com.example.euterpe.model.Track
+import com.example.euterpe.model.TrackList
+import com.example.euterpe.model.TrackListViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import layout.SelectionAdapter
@@ -31,7 +35,7 @@ private const val ARG_PARAM2 = "param2"
 class SelectionFragment : Fragment() {
     data class Audio(val uri: Uri,
                      val title: String,
-                     val artist: Int,
+                     val artist: String,
                      val duration: Int
     )
 
@@ -41,6 +45,7 @@ class SelectionFragment : Fragment() {
     private lateinit var selectionAdapter: SelectionAdapter
     private lateinit var viewPager: ViewPager2
     private val audioList = mutableListOf<Audio>()
+    private val trackListViewModel: TrackListViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,22 +67,22 @@ class SelectionFragment : Fragment() {
     }
 
     private fun showMenu(v: View) {
-        PopupMenu(activity!!, v).apply {
+        PopupMenu(requireActivity(), v).apply {
             // MainActivity implements OnMenuItemClickListener
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
 
                 when (item!!.itemId) {
                     R.id.menu_alphabetical -> {
-                        Toast.makeText(activity!!, item.title, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
                     }
                     R.id.menu_artist -> {
-                        Toast.makeText(activity!!, item.title, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
                     }
                     R.id.menu_album -> {
-                        Toast.makeText(activity!!, item.title, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
                     }
                     R.id.menu_recently -> {
-                        Toast.makeText(activity!!, item.title, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -108,8 +113,8 @@ class SelectionFragment : Fragment() {
         query?.use{ cursor ->
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
             val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
-            val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ARTIST)
-            val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
+            val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ARTIST)
+            val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
 
             Log.i("Query count", cursor.count.toString())
 
@@ -119,10 +124,10 @@ class SelectionFragment : Fragment() {
                         val id = cursor.getLong(idCol)
                         val name = cursor.getString(nameCol)
                         val duration = cursor.getInt(durationCol)
-                        val size = cursor.getInt(sizeCol)
+                        val artist = cursor.getString(artistCol)
                         val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,id)
 
-                        audioList += Audio(contentUri, name, duration, size)
+                        audioList += Audio(contentUri, name, artist, duration)
                     } while(cursor.moveToNext())
                 } else {
                     Log.i("Query", "Cursor move to first fail")
@@ -153,6 +158,18 @@ class SelectionFragment : Fragment() {
         }.attach()
 
         loadMusic()
+
+        var trackList = TrackList()
+
+        for(track in audioList){
+            var newTrack = Track(track.uri, track.title, track.artist, track.duration)
+            trackList.addTrack(newTrack)
+        }
+
+        trackListViewModel.setTrackList(trackList)
+        Log.i("Selection Fragment", trackListViewModel.trackList.toString())
+
+
     }
 
     companion object {

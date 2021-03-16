@@ -6,7 +6,7 @@
     <data>
         <variable
             name="trackViewModel"
-            type="com.example.euterpe.TrackViewModel" />
+            type="com.example.euterpe.model.TrackViewModel" />
     </data>
 
     <FrameLayout

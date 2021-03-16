@@ -1,13 +1,17 @@
 package com.example.euterpe
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import com.example.euterpe.databinding.FragmentTrackListBinding
+import com.example.euterpe.model.TrackListViewModel
+import com.example.euterpe.model.TrackViewModel
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -26,6 +30,7 @@ class TrackListFragment : Fragment() {
     private var param2: String? = null
 
     lateinit var binding: FragmentTrackListBinding
+    private val trackListViewModel: TrackListViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +51,8 @@ class TrackListFragment : Fragment() {
         var trackViewModel = ViewModelProvider(this).get(TrackViewModel::class.java)
         binding.trackViewModel = trackViewModel
         adapter.data = trackViewModel.trackList
+
+        Log.i("Track List Fragment", trackListViewModel.trackList.toString())
 
         //return inflater.inflate(R.layout.fragment_track_list, container, false)
         return view

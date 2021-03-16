@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.euterpe">
-    <uses-sdk
-        android:minSdkVersion="16"
-        android:targetSdkVersion="17" />
+    <uses-sdk android:targetSdkVersion="17" />
 
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL"
         tools:ignore="ProtectedPermissions" />
