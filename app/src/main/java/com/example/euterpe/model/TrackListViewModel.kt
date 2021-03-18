@@ -18,4 +18,12 @@ class TrackListViewModel : ViewModel() {
     fun setCurrentTrack(track: Track){
         _currentTrack.value = track
     }
+
+    fun setCurrentToRandomTrack(){
+        val size = _trackList.value!!.getCount() - 1
+        val randomNo = (0..size).random()
+        var randomTrack = _trackList.value!!.getTrackAtIndex(randomNo)
+        setCurrentTrack(randomTrack)
+    }
+
 }

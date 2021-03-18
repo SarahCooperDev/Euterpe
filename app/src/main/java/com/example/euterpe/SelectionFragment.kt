@@ -12,9 +12,11 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
+import com.example.euterpe.databinding.FragmentSelectionBinding
 import com.example.euterpe.model.Track
 import com.example.euterpe.model.TrackList
 import com.example.euterpe.model.TrackListViewModel
@@ -45,7 +47,8 @@ class SelectionFragment : Fragment() {
     private lateinit var selectionAdapter: SelectionAdapter
     private lateinit var viewPager: ViewPager2
     private val audioList = mutableListOf<Audio>()
-    private val trackListViewModel: TrackListViewModel by activityViewModels()
+    private val viewModel: TrackListViewModel by activityViewModels()
+    lateinit var binding: FragmentSelectionBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,13 +60,17 @@ class SelectionFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        val rootView: View = inflater.inflate(R.layout.fragment_selection, container, false)
-        val popupButton = rootView.findViewById<View>(R.id.orderby_menu_btn) as ImageButton
+        //val rootView: View = inflater.inflate(R.layout.fragment_selection, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_selection, container, false);
+        val view: View = binding.root
+
+        val popupButton = view.findViewById<View>(R.id.orderby_menu_btn) as ImageButton
 
         popupButton.setOnClickListener { v ->
             this.showMenu(v)
         }
-        return rootView
+
+        return view
     }
 
     private fun showMenu(v: View) {
@@ -159,6 +166,10 @@ class SelectionFragment : Fragment() {
 
         loadMusic()
 
+        binding?.apply{
+            trackListViewModel = viewModel
+        }
+
         var trackList = TrackList()
 
         for(track in audioList){
@@ -166,9 +177,9 @@ class SelectionFragment : Fragment() {
             trackList.addTrack(newTrack)
         }
 
-        trackListViewModel.setTrackList(trackList)
-        Log.i("Selection Fragment", trackListViewModel.trackList.toString())
-
+        viewModel.setTrackList(trackList)
+        viewModel.setCurrentToRandomTrack()
+        Log.i("Selection Fragment", viewModel.trackList.toString())
 
     }
 

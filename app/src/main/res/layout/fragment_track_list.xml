@@ -5,7 +5,7 @@
 
     <data>
         <variable
-            name="trackViewModel"
+            name="trackListViewModel"
             type="com.example.euterpe.model.TrackListViewModel" />
     </data>
 
