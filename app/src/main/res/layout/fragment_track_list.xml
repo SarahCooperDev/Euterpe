@@ -14,12 +14,6 @@
         android:layout_height="match_parent"
         tools:context=".TrackListFragment">
 
-        <TextView
-            android:id="@+id/track_list_frg_title"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/track_list_fragment" />
-
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -18,14 +18,16 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:background="@color/colorLightBlack">
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tab_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                app:tabMode="scrollable" >
+                app:tabMode="scrollable"
+                app:tabTextColor="@color/colorOrange">
             </com.google.android.material.tabs.TabLayout>
 
             <ImageButton
@@ -44,14 +46,15 @@
             android:id="@+id/selection_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:background="@color/colorDarkBlack">
 
         </androidx.viewpager2.widget.ViewPager2>
 
         <fragment
             android:id="@+id/current_fragment"
             android:name="com.example.euterpe.CurrentTrackFragment"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
     </LinearLayout>

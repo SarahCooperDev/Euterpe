@@ -1,9 +1,11 @@
 package com.example.euterpe
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -25,8 +27,8 @@ class CurrentTrackFragment : Fragment() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_current_track, container, false);
         val view: View = binding.root
 
@@ -36,9 +38,19 @@ class CurrentTrackFragment : Fragment() {
 
         binding.lifecycleOwner = viewLifecycleOwner
 
-        //val adapter = TrackListAdapter()
-        //binding.trackListRcv.adapter = adapter
-        //adapter.data = viewModel.trackList.value!!.trackList
+        binding.playbackBtn.setOnClickListener{
+            viewModel.playbackTrack(requireContext())
+
+            if(viewModel.isPaused.value!!){
+                binding.playbackBtn.text = "Play"
+            } else {
+                binding.playbackBtn.text = "Pause"
+            }
+        }
+
+        binding.nextBtn.setOnClickListener{
+            viewModel.playNextTrack(requireContext())
+        }
 
         return view
     }

@@ -13,23 +13,56 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@color/colorLightBlack">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:text="@{trackListViewModel.currentTrack.title}"
-            android:id="@+id/current_track_title" />
+            android:layout_weight="2">
 
-        <TextView
+            <TextView
+                android:layout_marginLeft="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:textSize="20dp"
+                android:textColor="@color/colorOrange"
+                android:text="@{trackListViewModel.currentTrack.title}"
+                android:id="@+id/current_track_title" />
+
+            <TextView
+                android:layout_marginLeft="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/current_track_title"
+                app:layout_constraintStart_toStartOf="parent"
+                android:textSize="12dp"
+                android:textColor="@color/colorOrange"
+                android:text="@{trackListViewModel.currentTrack.artist}"
+                android:id="@+id/current_track_artist" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/current_track_title"
-            app:layout_constraintStart_toEndOf="@id/current_track_title"
-            android:text="@{trackListViewModel.currentTrack.artist}"
-            android:id="@+id/current_track_artist" />
+            android:layout_height="match_parent">
 
+            <Button
+                android:layout_marginLeft="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/playback_btn"
+                android:text="Play" />
+
+            <Button
+                android:layout_marginLeft="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/next_btn"
+                android:text="Next" />
+
+        </LinearLayout>
     </LinearLayout>
 </layout>
