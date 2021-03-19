@@ -55,7 +55,7 @@ class TrackListViewModel : ViewModel() {
     }
 
     private fun prepareTrack(context: Context, uri: Uri){
-        _mediaPlayer.value!!.setDataSource(context, _currentTrack.value!!.uri)
+        _mediaPlayer.value!!.setDataSource(context, uri)
         _mediaPlayer.value!!.prepare()
     }
 
@@ -67,6 +67,14 @@ class TrackListViewModel : ViewModel() {
             _mediaPlayer.value!!.start()
         }
 
+    }
+
+    fun playOnClick(context: Context, uri: Uri){
+        val clickedTrack = _trackList.value!!.trackList.find{ it.uri == uri}
+        setCurrentTrack(clickedTrack!!)
+        stopTrack()
+        prepareTrack(context, uri)
+        _mediaPlayer.value!!.start()
     }
 
     fun playbackTrack(context: Context){
