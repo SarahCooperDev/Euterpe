@@ -1,15 +1,16 @@
 package com.example.euterpe
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import androidx.fragment.app.activityViewModels
+import com.example.euterpe.databinding.FragmentPlaybackBinding
+import com.example.euterpe.model.TrackListViewModel
 
 /**
  * A simple [Fragment] subclass.
@@ -18,13 +19,39 @@ private const val ARG_PARAM2 = "param2"
  */
 class PlaybackFragment : Fragment() {
 
+    private val viewModel: TrackListViewModel by activityViewModels()
+    lateinit var binding: FragmentPlaybackBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_playback, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_playback, container, false);
+        val view: View = binding.root
+
+        binding?.apply{
+            trackListViewModel = viewModel
+        }
+
+        binding.lifecycleOwner = viewLifecycleOwner
+
+        binding.playpausePlaybackBtn.setOnClickListener{
+            viewModel.playbackTrack(requireContext())
+
+            if(viewModel.mediaPlayer.value!!.isPlaying){
+                binding.playpausePlaybackBtn.text = "Pause"
+            } else {
+                binding.playpausePlaybackBtn.text = "Play"
+            }
+        }
+
+        binding.nextPlaybackBtn.setOnClickListener{
+            viewModel.playNextTrack(requireContext())
+        }
+
+        return view
     }
 
     companion object {

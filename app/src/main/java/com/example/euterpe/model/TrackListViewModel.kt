@@ -75,6 +75,7 @@ class TrackListViewModel : ViewModel() {
         stopTrack()
         prepareTrack(context, uri)
         _mediaPlayer.value!!.start()
+        setIsPaused(false)
     }
 
     fun playbackTrack(context: Context){
@@ -107,6 +108,7 @@ class TrackListViewModel : ViewModel() {
     fun init(context: Context){
         setCurrentToRandomTrack()
         _isRandom.value = true
+        setIsPaused(true)
 
         _mediaPlayer.value = MediaPlayer().apply {
             setAudioAttributes(
