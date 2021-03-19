@@ -30,7 +30,7 @@ class TrackListViewModel : ViewModel() {
         _trackList.value = tracks
     }
 
-    fun setCurrentTrack(track: Track){
+    private fun setCurrentTrack(track: Track){
         _currentTrack.value = track
     }
 
@@ -38,30 +38,35 @@ class TrackListViewModel : ViewModel() {
         _mediaPlayer.value = mediaP
     }
 
-    fun setIsPaused(isPaused: Boolean){
+    private fun setIsPaused(isPaused: Boolean){
         _isPaused.value = isPaused
     }
 
-    fun setCurrentToRandomTrack(){
+    private fun setCurrentToRandomTrack(){
         val size = _trackList.value!!.getCount() - 1
         val randomNo = (0..size).random()
         var randomTrack = _trackList.value!!.getTrackAtIndex(randomNo)
         setCurrentTrack(randomTrack)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun beginPlayingTrack(context: Context, uri: Uri){
-        _mediaPlayer.value = MediaPlayer().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build()
-            )
-            context?.let { setDataSource(it, uri) }
-            prepareAsync()
-            start()
+    private fun stopTrack(){
+        _mediaPlayer.value!!.stop()
+        _mediaPlayer.value!!.reset()
+    }
+
+    private fun prepareTrack(context: Context, uri: Uri){
+        _mediaPlayer.value!!.setDataSource(context, _currentTrack.value!!.uri)
+        _mediaPlayer.value!!.prepare()
+    }
+
+    private fun autoPlayNextTrack(context: Context){
+        if(_isRandom.value!!){
+            setCurrentToRandomTrack()
+            stopTrack()
+            prepareTrack(context, _currentTrack.value!!.uri)
+            _mediaPlayer.value!!.start()
         }
+
     }
 
     fun playbackTrack(context: Context){
@@ -75,22 +80,39 @@ class TrackListViewModel : ViewModel() {
         }
     }
 
-    fun stopTrack(){
-        _mediaPlayer.value!!.stop()
-        _mediaPlayer.value!!.reset()
-        _mediaPlayer.value!!.release()
-    }
-
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun playNextTrack(context: Context){
         //TODO: implement non-random next
 
+        val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
+
         setCurrentToRandomTrack()
         stopTrack()
-        beginPlayingTrack(context, _currentTrack.value!!.uri)
+        prepareTrack(context, _currentTrack.value!!.uri)
 
-        if(_isPaused.value!!){
-            playbackTrack(context)
+        if(isCurrentlyPlaying){
+            _mediaPlayer.value!!.start()
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun init(context: Context){
+        setCurrentToRandomTrack()
+        _isRandom.value = true
+
+        _mediaPlayer.value = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build()
+            )
+        }
+
+        _mediaPlayer.value!!.setOnCompletionListener {
+            autoPlayNextTrack(context)
+        }
+
+        prepareTrack(context, _currentTrack.value!!.uri)
     }
 }

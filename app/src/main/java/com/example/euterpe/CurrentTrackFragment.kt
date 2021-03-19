@@ -41,10 +41,10 @@ class CurrentTrackFragment : Fragment() {
         binding.playbackBtn.setOnClickListener{
             viewModel.playbackTrack(requireContext())
 
-            if(viewModel.isPaused.value!!){
-                binding.playbackBtn.text = "Play"
-            } else {
+            if(viewModel.mediaPlayer.value!!.isPlaying){
                 binding.playbackBtn.text = "Pause"
+            } else {
+                binding.playbackBtn.text = "Play"
             }
         }
 

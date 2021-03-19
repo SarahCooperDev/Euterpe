@@ -167,13 +167,7 @@ class SelectionFragment : Fragment() {
         }
 
         viewModel.setTrackList(trackList)
-        viewModel.setCurrentToRandomTrack()
-
-        var currentTrack = viewModel.currentTrack
-
-        viewModel.beginPlayingTrack(requireContext(), currentTrack.value!!.uri)
-        viewModel.playbackTrack(requireContext())
-
+        viewModel.init(requireContext())
 
         Log.i("Selection Fragment", viewModel.trackList.toString())
     }
