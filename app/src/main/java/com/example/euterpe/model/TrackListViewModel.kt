@@ -112,6 +112,22 @@ class TrackListViewModel : ViewModel() {
         }
     }
 
+    fun playPreviousTrack(context: Context){
+        val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
+
+        if(_currentIndex.value!! != 0){
+            val track = getTrackFromIndex(_currentIndex.value!! - 1 )
+            setCurrentTrack(track)
+            setCurrentIndex(_currentIndex.value!! - 1)
+            stopTrack()
+            prepareTrack(context, _currentTrack.value!!.uri)
+
+            if(isCurrentlyPlaying){
+                _mediaPlayer.value!!.start()
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun playNextTrack(context: Context){
         val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying

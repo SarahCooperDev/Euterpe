@@ -47,6 +47,10 @@ class PlaybackFragment : Fragment() {
             }
         }
 
+        binding.previousPlaybackBtn.setOnClickListener{
+            viewModel.playPreviousTrack(requireContext())
+        }
+
         binding.nextPlaybackBtn.setOnClickListener{
             viewModel.playNextTrack(requireContext())
         }

@@ -48,6 +48,10 @@ class CurrentTrackFragment : Fragment() {
             }
         }
 
+        binding.previousBtn.setOnClickListener{
+            viewModel.playPreviousTrack(requireContext())
+        }
+
         binding.nextBtn.setOnClickListener{
             viewModel.playNextTrack(requireContext())
         }
