@@ -14,8 +14,14 @@ class TrackListViewModel : ViewModel() {
     private val _trackList = MutableLiveData<TrackList>()
     val trackList: LiveData<TrackList> = _trackList
 
+    private val _activeTrackList = MutableLiveData<TrackList>()
+    val activeTrackList: LiveData<TrackList> = _activeTrackList
+
     private val _currentTrack = MutableLiveData<Track>()
     val currentTrack: LiveData<Track> = _currentTrack
+
+    private val _currentIndex = MutableLiveData<Int>()
+    val currentIndex: LiveData<Int> = _currentIndex
 
     private var _mediaPlayer = MutableLiveData<MediaPlayer>()
     var mediaPlayer: LiveData<MediaPlayer> = _mediaPlayer
@@ -30,8 +36,20 @@ class TrackListViewModel : ViewModel() {
         _trackList.value = tracks
     }
 
+    private fun setActiveTrackList(tracks: TrackList){
+        _activeTrackList.value = tracks
+    }
+
+    private fun setActiveTracks(tracks: MutableList<Track>){
+        _activeTrackList.value!!.trackList = tracks
+    }
+
     private fun setCurrentTrack(track: Track){
         _currentTrack.value = track
+    }
+
+    private fun setCurrentIndex(index: Int){
+        _currentIndex.value = index
     }
 
     fun setMediaPlayer(mediaP: MediaPlayer){
@@ -42,11 +60,8 @@ class TrackListViewModel : ViewModel() {
         _isPaused.value = isPaused
     }
 
-    private fun setCurrentToRandomTrack(){
-        val size = _trackList.value!!.getCount() - 1
-        val randomNo = (0..size).random()
-        var randomTrack = _trackList.value!!.getTrackAtIndex(randomNo)
-        setCurrentTrack(randomTrack)
+    private fun getTrackFromIndex(index: Int): Track{
+        return _activeTrackList.value!!.trackList[index]
     }
 
     private fun stopTrack(){
@@ -59,19 +74,27 @@ class TrackListViewModel : ViewModel() {
         _mediaPlayer.value!!.prepare()
     }
 
-    private fun autoPlayNextTrack(context: Context){
-        if(_isRandom.value!!){
-            setCurrentToRandomTrack()
-            stopTrack()
-            prepareTrack(context, _currentTrack.value!!.uri)
-            _mediaPlayer.value!!.start()
-        }
+    private fun resetActiveTracklist(){
+        val duplicateList = TrackList()
+        duplicateList.trackList = _trackList.value!!.trackList.toMutableList()
+        setActiveTrackList(duplicateList)
+    }
 
+    private fun shuffleTracklist(){
+        resetActiveTracklist()
+        _activeTrackList.value!!.trackList.shuffle()
+        setCurrentIndex(0)
     }
 
     fun playOnClick(context: Context, uri: Uri){
-        val clickedTrack = _trackList.value!!.trackList.find{ it.uri == uri}
+        shuffleTracklist()
+
+        val clickedTrack = _activeTrackList.value!!.trackList.find{ it.uri == uri}
+        _activeTrackList.value!!.trackList.remove(clickedTrack)
+        _activeTrackList.value!!.trackList.add(0, clickedTrack!!)
+
         setCurrentTrack(clickedTrack!!)
+        setCurrentIndex(0)
         stopTrack()
         prepareTrack(context, uri)
         _mediaPlayer.value!!.start()
@@ -91,11 +114,11 @@ class TrackListViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun playNextTrack(context: Context){
-        //TODO: implement non-random next
-
         val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
 
-        setCurrentToRandomTrack()
+        val track = getTrackFromIndex(_currentIndex.value!! + 1)
+        setCurrentTrack(track)
+        setCurrentIndex(_currentIndex.value!! + 1)
         stopTrack()
         prepareTrack(context, _currentTrack.value!!.uri)
 
@@ -106,8 +129,10 @@ class TrackListViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun init(context: Context){
-        setCurrentToRandomTrack()
+        resetActiveTracklist()
+
         _isRandom.value = true
+        shuffleTracklist()
         setIsPaused(true)
 
         _mediaPlayer.value = MediaPlayer().apply {
@@ -120,9 +145,12 @@ class TrackListViewModel : ViewModel() {
         }
 
         _mediaPlayer.value!!.setOnCompletionListener {
-            autoPlayNextTrack(context)
+            //autoPlayNextTrack(context)
+            playNextTrack(context)
         }
 
-        prepareTrack(context, _currentTrack.value!!.uri)
+        val track = getTrackFromIndex(_currentIndex.value!!)
+        setCurrentTrack(track)
+        prepareTrack(context, track.uri)
     }
 }

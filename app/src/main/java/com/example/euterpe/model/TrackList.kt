@@ -1,10 +1,10 @@
 package com.example.euterpe.model
 
 class TrackList {
-    var trackList = listOf<Track>()
+    var trackList = mutableListOf<Track>()
 
     fun addTrack(track: Track){
-        trackList += track
+        trackList.add(track)
     }
 
     fun getCount(): Int {
