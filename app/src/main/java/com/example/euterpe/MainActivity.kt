@@ -12,11 +12,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.app_toolbar))
         requestPermission()
     }
 
+    //override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    //    getMenuInflater().inflate(R.menu.app_menu, menu);
+    //    return true
+    //}
+
     private fun requestPermission(){
-        Log.i("Permission", "Requesting permission")
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED) {
 

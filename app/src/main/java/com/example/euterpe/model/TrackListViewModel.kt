@@ -38,6 +38,10 @@ class TrackListViewModel : ViewModel() {
         _trackList.value = tracks
     }
 
+    private fun setIsRandom(isRandom: Boolean){
+        _isRandom.value = isRandom
+    }
+
     private fun setActiveTrackList(tracks: TrackList){
         _activeTrackList.value = tracks
     }
@@ -88,6 +92,15 @@ class TrackListViewModel : ViewModel() {
         setCurrentIndex(0)
     }
 
+    private fun orderTracklist(){
+        val currentTrack = _currentTrack.value!!
+        resetActiveTracklist()
+
+        var index = _activeTrackList.value!!.trackList.indexOf(currentTrack)
+        setCurrentTrack(currentTrack)
+        setCurrentIndex(index)
+    }
+
     private fun changeTrack(context: Context, newCurrentTrack: Track, newIndex: Int){
         setCurrentTrack(newCurrentTrack)
         setCurrentIndex(newIndex)
@@ -95,18 +108,33 @@ class TrackListViewModel : ViewModel() {
         prepareTrack(context, newCurrentTrack.uri)
     }
 
+    fun switchRandom(){
+        if(_isRandom.value!!){
+            setIsRandom(false)
+            orderTracklist()
+        } else {
+            setIsRandom(true)
+            shuffleTracklist()
+        }
+    }
+
     fun adjustCurrentPosition(seekBar: SeekBar){
         mediaPlayer.value!!.seekTo(seekBar.progress)
     }
 
     fun playOnClick(context: Context, uri: Uri){
-        shuffleTracklist()
-
         val clickedTrack = _activeTrackList.value!!.trackList.find{ it.uri == uri}
-        _activeTrackList.value!!.trackList.remove(clickedTrack)
-        _activeTrackList.value!!.trackList.add(0, clickedTrack!!)
+        if(_isRandom.value!!){
+            shuffleTracklist()
 
-        changeTrack(context, clickedTrack, 0)
+            _activeTrackList.value!!.trackList.remove(clickedTrack)
+            _activeTrackList.value!!.trackList.add(0, clickedTrack!!)
+
+            changeTrack(context, clickedTrack, 0)
+        } else {
+            var index = _activeTrackList.value!!.trackList.indexOf(clickedTrack)
+            changeTrack(context, clickedTrack!!, index)
+        }
 
         _mediaPlayer.value!!.start()
         setIsPaused(false)
@@ -127,11 +155,17 @@ class TrackListViewModel : ViewModel() {
         val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
 
         if(_currentIndex.value!! != 0){
-            val track = getTrackFromIndex(_currentIndex.value!! - 1 )
-            changeTrack(context, track, _currentIndex.value!! - 1)
+            val currentPosition = _mediaPlayer.value!!.currentPosition
 
-            if(isCurrentlyPlaying){
-                _mediaPlayer.value!!.start()
+            if(currentPosition > 10000){
+                mediaPlayer.value!!.seekTo(0)
+            } else {
+                val track = getTrackFromIndex(_currentIndex.value!! - 1 )
+                changeTrack(context, track, _currentIndex.value!! - 1)
+
+                if(isCurrentlyPlaying){
+                    _mediaPlayer.value!!.start()
+                }
             }
         }
     }

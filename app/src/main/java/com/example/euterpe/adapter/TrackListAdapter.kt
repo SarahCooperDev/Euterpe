@@ -31,7 +31,7 @@ class TrackListAdapter(val clickListener: TrackListListener): ListAdapter<Track,
             binding.track = item
             binding.clickListener = clickListener
             binding.trackTitleTv.text = item.title
-            binding.trackArtistTv.text = item.artist
+            binding.trackArtistTv.text = item.detailSummaryString
         }
 
         companion object {
