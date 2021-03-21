@@ -8,6 +8,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import com.example.euterpe.adapter.TrackListAdapter
+import com.example.euterpe.adapter.TrackListListener
 import com.example.euterpe.databinding.FragmentTrackListBinding
 import com.example.euterpe.model.TrackListViewModel
 
@@ -39,9 +41,10 @@ class TrackListFragment : Fragment() {
             trackListViewModel = viewModel
         }
 
-        val adapter = TrackListAdapter(TrackListListener { uri ->
-            viewModel.playOnClick(requireContext(), uri)
-        })
+        val adapter =
+            TrackListAdapter(TrackListListener { uri ->
+                viewModel.playOnClick(requireContext(), uri)
+            })
 
         binding.trackListRcv.adapter = adapter
         viewModel.trackList.observe(viewLifecycleOwner, Observer{

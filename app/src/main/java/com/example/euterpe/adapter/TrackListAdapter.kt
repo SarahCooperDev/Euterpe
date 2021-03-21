@@ -1,4 +1,4 @@
-package com.example.euterpe
+package com.example.euterpe.adapter
 
 import android.annotation.SuppressLint
 import android.net.Uri
@@ -10,7 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.euterpe.databinding.TrackViewBinding
 import com.example.euterpe.model.Track
 
-class TrackListAdapter(val clickListener: TrackListListener): ListAdapter<Track, TrackListAdapter.ViewHolder>(TrackDiffCallback()) {
+class TrackListAdapter(val clickListener: TrackListListener): ListAdapter<Track, TrackListAdapter.ViewHolder>(
+    TrackDiffCallback()
+) {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
@@ -18,7 +20,9 @@ class TrackListAdapter(val clickListener: TrackListListener): ListAdapter<Track,
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder.from(parent)
+        return ViewHolder.from(
+            parent
+        )
     }
 
     class ViewHolder private constructor(private val binding: TrackViewBinding) : RecyclerView.ViewHolder(binding.root){
@@ -31,10 +35,12 @@ class TrackListAdapter(val clickListener: TrackListListener): ListAdapter<Track,
         }
 
         companion object {
-            fun from(parent: ViewGroup): ViewHolder{
+            fun from(parent: ViewGroup): ViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = TrackViewBinding.inflate(layoutInflater, parent, false)
-                return ViewHolder(binding)
+                return ViewHolder(
+                    binding
+                )
             }
         }
     }

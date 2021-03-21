@@ -5,6 +5,8 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import android.widget.SeekBar
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -86,6 +88,17 @@ class TrackListViewModel : ViewModel() {
         setCurrentIndex(0)
     }
 
+    private fun changeTrack(context: Context, newCurrentTrack: Track, newIndex: Int){
+        setCurrentTrack(newCurrentTrack)
+        setCurrentIndex(newIndex)
+        stopTrack()
+        prepareTrack(context, newCurrentTrack.uri)
+    }
+
+    fun adjustCurrentPosition(seekBar: SeekBar){
+        mediaPlayer.value!!.seekTo(seekBar.progress)
+    }
+
     fun playOnClick(context: Context, uri: Uri){
         shuffleTracklist()
 
@@ -93,10 +106,8 @@ class TrackListViewModel : ViewModel() {
         _activeTrackList.value!!.trackList.remove(clickedTrack)
         _activeTrackList.value!!.trackList.add(0, clickedTrack!!)
 
-        setCurrentTrack(clickedTrack!!)
-        setCurrentIndex(0)
-        stopTrack()
-        prepareTrack(context, uri)
+        changeTrack(context, clickedTrack, 0)
+
         _mediaPlayer.value!!.start()
         setIsPaused(false)
     }
@@ -117,10 +128,7 @@ class TrackListViewModel : ViewModel() {
 
         if(_currentIndex.value!! != 0){
             val track = getTrackFromIndex(_currentIndex.value!! - 1 )
-            setCurrentTrack(track)
-            setCurrentIndex(_currentIndex.value!! - 1)
-            stopTrack()
-            prepareTrack(context, _currentTrack.value!!.uri)
+            changeTrack(context, track, _currentIndex.value!! - 1)
 
             if(isCurrentlyPlaying){
                 _mediaPlayer.value!!.start()
@@ -133,14 +141,18 @@ class TrackListViewModel : ViewModel() {
         val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
 
         val track = getTrackFromIndex(_currentIndex.value!! + 1)
-        setCurrentTrack(track)
-        setCurrentIndex(_currentIndex.value!! + 1)
-        stopTrack()
-        prepareTrack(context, _currentTrack.value!!.uri)
+        changeTrack(context, track, _currentIndex.value!! + 1)
 
         if(isCurrentlyPlaying){
             _mediaPlayer.value!!.start()
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun autoplayNextTrack(context: Context){
+        val track = getTrackFromIndex(_currentIndex.value!! + 1)
+        changeTrack(context, track, _currentIndex.value!! + 1)
+         _mediaPlayer.value!!.start()
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -161,12 +173,15 @@ class TrackListViewModel : ViewModel() {
         }
 
         _mediaPlayer.value!!.setOnCompletionListener {
-            //autoPlayNextTrack(context)
-            playNextTrack(context)
+            Log.i("TrackListViewModel", "Autoplaying next song")
+            Log.i("TrackListViewModel", _mediaPlayer.value!!.isPlaying.toString())
+            autoplayNextTrack(context)
         }
 
+        setCurrentIndex(0)
         val track = getTrackFromIndex(_currentIndex.value!!)
         setCurrentTrack(track)
+
         prepareTrack(context, track.uri)
     }
 }

@@ -9,6 +9,7 @@ import androidx.annotation.RequiresApi
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import com.example.euterpe.databinding.FragmentCurrentTrackBinding
 import com.example.euterpe.model.TrackListViewModel
 
@@ -40,13 +41,15 @@ class CurrentTrackFragment : Fragment() {
 
         binding.playbackBtn.setOnClickListener{
             viewModel.playbackTrack(requireContext())
-
-            if(viewModel.mediaPlayer.value!!.isPlaying){
-                binding.playbackBtn.text = "Pause"
-            } else {
-                binding.playbackBtn.text = "Play"
-            }
         }
+
+        viewModel.isPaused.observe(viewLifecycleOwner, Observer {
+            if(viewModel.mediaPlayer.value!!.isPlaying){
+                binding.playbackBtn.setBackgroundResource(R.mipmap.ic_pause_btn_dark_foreground)
+            } else {
+                binding.playbackBtn.setBackgroundResource(R.mipmap.ic_play_btn_dark_foreground)
+            }
+        })
 
         binding.previousBtn.setOnClickListener{
             viewModel.playPreviousTrack(requireContext())

@@ -8,7 +8,7 @@
             type="com.example.euterpe.model.Track"/>
 
         <variable name="clickListener"
-            type="com.example.euterpe.TrackListListener"/>
+            type="com.example.euterpe.adapter.TrackListListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

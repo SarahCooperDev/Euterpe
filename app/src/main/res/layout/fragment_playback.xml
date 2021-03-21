@@ -7,6 +7,9 @@
         <variable
             name="trackListViewModel"
             type="com.example.euterpe.model.TrackListViewModel" />
+        <variable
+            name="isCurrentlyPlaying"
+            type="Boolean" />
     </data>
 
     <LinearLayout
@@ -14,23 +17,40 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="40dp"
-            android:layout_marginTop="40dp"
-            android:textColor="@color/colorOrange"
-            android:gravity="center_horizontal"
-            android:text="@{trackListViewModel.currentTrack.title}" />
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="vertical">
 
-        <TextView
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="40dp"
+                android:layout_marginTop="40dp"
+                android:textColor="@color/colorOrange"
+                android:gravity="center_horizontal"
+                android:text="@{trackListViewModel.currentTrack.title}" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="30dp"
+                android:layout_marginTop="10dp"
+                android:textColor="@color/colorOrange"
+                android:gravity="center_horizontal"
+                android:text="@{trackListViewModel.currentTrack.artist}" />
+
+        </LinearLayout>
+
+        <SeekBar
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="30dp"
-            android:layout_marginTop="10dp"
-            android:textColor="@color/colorOrange"
-            android:gravity="center_horizontal"
-            android:text="@{trackListViewModel.currentTrack.artist}" />
+            android:layout_margin="16dp"
+            android:id="@+id/duration_seekbar"
+            android:min="0"
+            android:max="@{trackListViewModel.currentTrack.duration}"
+            android:progress="@{trackListViewModel.mediaPlayer.currentPosition}"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,26 +58,29 @@
             android:orientation="horizontal"
             android:layout_marginTop="20dp">
 
-            <Button
+            <ImageButton
                 android:layout_marginLeft="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:id="@+id/previous_playback_btn"
-                android:text="Previous" />
+                android:background="@mipmap/ic_previous_btn_dark_foreground"
+                android:contentDescription="Previous Button" />
 
-            <Button
+            <ImageButton
                 android:layout_marginLeft="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:id="@+id/playpause_playback_btn"
-                android:text="@{trackListViewModel.isPaused ? @string/play_text : @string/pause_text}" />
+                android:background="@color/colorDarkBlack"
+                android:contentDescription="Play/pause Button" />
 
-            <Button
+            <ImageButton
                 android:layout_marginLeft="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:id="@+id/next_playback_btn"
-                android:text="Next" />
+                android:background="@mipmap/ic_next_btn_dark_foreground"
+                android:contentDescription="Next Button"/>
 
 
         </LinearLayout>

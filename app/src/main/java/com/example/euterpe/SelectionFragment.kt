@@ -172,6 +172,11 @@ class SelectionFragment : Fragment() {
         Log.i("Selection Fragment", viewModel.trackList.toString())
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.mediaPlayer.value!!.release()
+    }
+
     companion object {
         /**
          * Use this factory method to create a new instance of

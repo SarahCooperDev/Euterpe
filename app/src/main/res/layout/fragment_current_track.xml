@@ -16,17 +16,18 @@
         android:orientation="horizontal"
         android:background="@color/colorLightBlack">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="2">
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_gravity="center_vertical">
 
             <TextView
                 android:layout_marginLeft="16dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 android:textSize="20dp"
                 android:textColor="@color/colorOrange"
                 android:text="@{trackListViewModel.currentTrack.title}"
@@ -36,39 +37,41 @@
                 android:layout_marginLeft="16dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/current_track_title"
-                app:layout_constraintStart_toStartOf="parent"
                 android:textSize="12dp"
                 android:textColor="@color/colorOrange"
                 android:text="@{trackListViewModel.currentTrack.artist}"
                 android:id="@+id/current_track_artist" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
-            <Button
-                android:layout_marginLeft="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:layout_marginLeft="8dp"
+                android:layout_marginBottom="8dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:id="@+id/previous_btn"
-                android:text="Previous" />
+                android:background="@mipmap/ic_previous_btn_dark_foreground"
+                android:contentDescription="Previous Button"  />
 
-            <Button
-                android:layout_marginLeft="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:layout_marginBottom="8dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:id="@+id/playback_btn"
-                android:text="@{trackListViewModel.isPaused ? @string/play_text : @string/pause_text}" />
+                android:background="@color/colorLightBlack"
+                android:contentDescription="Play/pause Button" />>
 
-            <Button
-                android:layout_marginLeft="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:layout_marginBottom="8dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:id="@+id/next_btn"
-                android:text="Next" />
+                android:background="@mipmap/ic_next_btn_dark_foreground"
+                android:contentDescription="Next Button" />
 
         </LinearLayout>
     </LinearLayout>
