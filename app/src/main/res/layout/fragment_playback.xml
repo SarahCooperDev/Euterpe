@@ -50,6 +50,15 @@
                 android:gravity="center_horizontal"
                 android:text="@{trackListViewModel.currentTrack.album}" />
 
+            <ImageButton
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:id="@+id/is_favourited_btn"
+                android:background="@color/colorDarkBlack"
+                android:contentDescription="Favourited button"
+                android:layout_gravity="center_horizontal"
+                />
+
         </LinearLayout>
 
         <SeekBar

@@ -3,6 +3,7 @@ package com.example.euterpe
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,6 +45,32 @@ class PlaybackFragment : Fragment() {
 
         binding.playpausePlaybackBtn.setOnClickListener{
             viewModel.playbackTrack(requireContext())
+        }
+
+        binding.isFavouritedBtn.setOnClickListener {
+            Log.i("Playback Fragment", "Clicked Favourite button")
+            viewModel.toggleFavouriteTrack(requireContext())
+
+            if(viewModel.currentTrack.value!!.isFavourited){
+                binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
+            } else {
+                binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
+            }
+        }
+
+        viewModel.currentTrack.observe(viewLifecycleOwner, Observer {
+            if(viewModel.currentTrack.value!!.isFavourited){
+                binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
+            } else {
+                binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
+            }
+        })
+
+
+        if(viewModel.currentTrack.value!!.isFavourited){
+            binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
+        } else {
+            binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
         }
 
         viewModel.isPaused.observe(viewLifecycleOwner, Observer {

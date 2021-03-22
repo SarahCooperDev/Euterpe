@@ -13,26 +13,31 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.app_toolbar))
-        requestPermission()
+        requestWritePermission()
+        requestReadPermission()
     }
 
-    //override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-    //    getMenuInflater().inflate(R.menu.app_menu, menu);
-    //    return true
-    //}
+    private fun requestWritePermission(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) {
 
-    private fun requestPermission(){
+            Log.i("Permission", "Write Permission hasn't been granted")
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+            return;
+        } else {
+            Log.i("Permission", "Write Permission already granted")
+        }
+    }
+
+    private fun requestReadPermission(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED) {
 
-            Log.i("Permission", "Permission hasn't been granted")
-
+            Log.i("Permission", "Read Permission hasn't been granted")
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-
-            return;
+            return
         } else {
-            Log.i("Permission", "Permission already granted")
+            Log.i("Permission", "Read Permission already granted")
         }
-
     }
 }
