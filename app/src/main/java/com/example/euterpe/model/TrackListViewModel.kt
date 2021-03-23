@@ -246,21 +246,35 @@ class TrackListViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun playNextTrack(context: Context){
+        Log.i("TrackList", _currentIndex.value!!.toString())
+        Log.i("TrackList", _playingTrackList.value!!.trackList.size.toString())
+
         val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
 
-        val track = getTrackFromIndex(_currentIndex.value!! + 1)
-        changeTrack(context, track, _currentIndex.value!! + 1)
+        if(_currentIndex.value!! + 1 < _playingTrackList.value!!.trackList.size){
+            val track = getTrackFromIndex(_currentIndex.value!! + 1)
+            changeTrack(context, track, _currentIndex.value!! + 1)
 
-        if(isCurrentlyPlaying){
-            _mediaPlayer.value!!.start()
+            if(isCurrentlyPlaying){
+                _mediaPlayer.value!!.start()
+            }
+        } else {
+            playbackTrack(context)
+            mediaPlayer.value!!.seekTo(_currentTrack.value!!.duration)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun autoplayNextTrack(context: Context){
-        val track = getTrackFromIndex(_currentIndex.value!! + 1)
-        changeTrack(context, track, _currentIndex.value!! + 1)
-         _mediaPlayer.value!!.start()
+        if(_currentIndex.value!! + 1 < _playingTrackList.value!!.trackList.size) {
+            val track = getTrackFromIndex(_currentIndex.value!! + 1)
+            changeTrack(context, track, _currentIndex.value!! + 1)
+            _mediaPlayer.value!!.start()
+        } else {
+            val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
+            playbackTrack(context)
+            mediaPlayer.value!!.seekTo(_currentTrack.value!!.duration)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
