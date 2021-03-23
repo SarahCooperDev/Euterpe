@@ -51,11 +51,11 @@ class PlaybackFragment : Fragment() {
             Log.i("Playback Fragment", "Clicked Favourite button")
             viewModel.toggleFavouriteTrack(requireContext())
 
-            if(viewModel.currentTrack.value!!.isFavourited){
-                binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
-            } else {
-                binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
-            }
+            //if(viewModel.currentTrack.value!!.isFavourited){
+            //    binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
+            //} else {
+            //    binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
+            //}
         }
 
         viewModel.currentTrack.observe(viewLifecycleOwner, Observer {

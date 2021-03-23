@@ -36,7 +36,7 @@ class TrackListFragment : Fragment() {
             })
 
         binding.trackListRcv.adapter = adapter
-        viewModel.trackList.observe(viewLifecycleOwner, Observer{
+        viewModel.viewTrackList.observe(viewLifecycleOwner, Observer{
             it?.let{
                 adapter.submitList(it.trackList)
             }

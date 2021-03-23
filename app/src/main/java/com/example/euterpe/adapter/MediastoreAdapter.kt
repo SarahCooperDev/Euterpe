@@ -127,6 +127,10 @@ class MediastoreAdapter{
                             val audioId = cursor.getLong(audioIdCol)
                             val playlistId = cursor.getLong(playlistIdCol)
                             playlist!!.addMember(audioId)
+
+                            if(playlist.name == "Favourites"){
+                                viewModel.trackList.value!!.trackList.find{ it.id == audioId}!!.isFavourited = true
+                            }
                         } while (cursor.moveToNext())
                     }
                 }

@@ -19,8 +19,11 @@ class TrackListViewModel : ViewModel() {
     private val _trackList = MutableLiveData<TrackList>()
     val trackList: LiveData<TrackList> = _trackList
 
-    private val _activeTrackList = MutableLiveData<TrackList>()
-    val activeTrackList: LiveData<TrackList> = _activeTrackList
+    private val _viewTrackList = MutableLiveData<TrackList>()
+    val viewTrackList: LiveData<TrackList> = _viewTrackList
+
+    private val _playingTrackList = MutableLiveData<TrackList>()
+    val playingTrackList: LiveData<TrackList> = _playingTrackList
 
     private val _currentTrack = MutableLiveData<Track>()
     val currentTrack: LiveData<Track> = _currentTrack
@@ -52,16 +55,20 @@ class TrackListViewModel : ViewModel() {
         _trackList.value = tracks
     }
 
+    fun setViewTrackList(tracks: TrackList){
+        _viewTrackList.value = tracks
+    }
+
+    private fun setPlayingTrackList(tracks: TrackList){
+        _playingTrackList.value = tracks
+    }
+
     private fun setIsRandom(isRandom: Boolean){
         _isRandom.value = isRandom
     }
 
-    private fun setActiveTrackList(tracks: TrackList){
-        _activeTrackList.value = tracks
-    }
-
     private fun setActiveTracks(tracks: MutableList<Track>){
-        _activeTrackList.value!!.trackList = tracks
+        _playingTrackList.value!!.trackList = tracks
     }
 
     private fun setCurrentTrack(track: Track){
@@ -81,7 +88,7 @@ class TrackListViewModel : ViewModel() {
     }
 
     private fun getTrackFromIndex(index: Int): Track{
-        return _activeTrackList.value!!.trackList[index]
+        return _playingTrackList.value!!.trackList[index]
     }
 
     private fun stopTrack(){
@@ -94,25 +101,34 @@ class TrackListViewModel : ViewModel() {
         _mediaPlayer.value!!.prepare()
     }
 
-    private fun resetActiveTracklist(){
+    private fun resetPlayingTracklist(){
         val duplicateList = TrackList()
         duplicateList.trackList = _trackList.value!!.trackList.toMutableList()
-        setActiveTrackList(duplicateList)
+        setPlayingTrackList(duplicateList)
     }
 
-    private fun shuffleTracklist(){
-        resetActiveTracklist()
-        _activeTrackList.value!!.trackList.shuffle()
+    private fun shufflePlayingTracklist(){
+        _playingTrackList.value!!.trackList.shuffle()
         setCurrentIndex(0)
     }
 
     private fun orderTracklist(){
         val currentTrack = _currentTrack.value!!
-        resetActiveTracklist()
+        resetPlayingTracklist()
 
-        var index = _activeTrackList.value!!.trackList.indexOf(currentTrack)
+        var index = _playingTrackList.value!!.trackList.indexOf(currentTrack)
         setCurrentTrack(currentTrack)
         setCurrentIndex(index)
+    }
+
+    fun setPlayingTracklistToFav(){
+        resetPlayingTracklist()
+
+        var favouritePlaylist = playlists.value!!.find{it.name == "Favourites"}
+        var newPlayingList = trackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
+        playingTrackList.value!!.trackList = newPlayingList.toMutableList()
+
+        setPlayingTrackList(playingTrackList.value!!)
     }
 
     private fun changeTrack(context: Context, newCurrentTrack: Track, newIndex: Int){
@@ -128,7 +144,8 @@ class TrackListViewModel : ViewModel() {
             orderTracklist()
         } else {
             setIsRandom(true)
-            shuffleTracklist()
+            resetPlayingTracklist()
+            shufflePlayingTracklist()
         }
     }
 
@@ -152,20 +169,44 @@ class TrackListViewModel : ViewModel() {
         var allPlaylists = playlists.value
         setPlaylists(allPlaylists!!)
 
+        var changingTrack = currentTrack.value
+        setCurrentTrack(changingTrack!!)
+
         Log.i("Favourited", currentTrack.value!!.isFavourited.toString())
     }
 
-    fun playOnClick(context: Context, uri: Uri){
-        val clickedTrack = _activeTrackList.value!!.trackList.find{ it.uri == uri}
+    fun playPlaylistOnClick(context: Context, uri: Uri){
+        val clickedTrack = _trackList.value!!.trackList.find{ it.uri == uri}
         if(_isRandom.value!!){
-            shuffleTracklist()
+            _playingTrackList.value!!.trackList.shuffle()
+            setCurrentIndex(0)
 
-            _activeTrackList.value!!.trackList.remove(clickedTrack)
-            _activeTrackList.value!!.trackList.add(0, clickedTrack!!)
+            _playingTrackList.value!!.trackList.remove(clickedTrack)
+            _playingTrackList.value!!.trackList.add(0, clickedTrack!!)
 
             changeTrack(context, clickedTrack, 0)
         } else {
-            var index = _activeTrackList.value!!.trackList.indexOf(clickedTrack)
+            var index = _playingTrackList.value!!.trackList.indexOf(clickedTrack)
+            changeTrack(context, clickedTrack!!, index)
+        }
+
+        _mediaPlayer.value!!.start()
+        setIsPaused(false)
+    }
+
+    fun playOnClick(context: Context, uri: Uri){
+        val clickedTrack = _trackList.value!!.trackList.find{ it.uri == uri}
+        resetPlayingTracklist()
+
+        if(_isRandom.value!!){
+            shufflePlayingTracklist()
+
+            _playingTrackList.value!!.trackList.remove(clickedTrack)
+            _playingTrackList.value!!.trackList.add(0, clickedTrack!!)
+
+            changeTrack(context, clickedTrack, 0)
+        } else {
+            var index = _playingTrackList.value!!.trackList.indexOf(clickedTrack)
             changeTrack(context, clickedTrack!!, index)
         }
 
@@ -224,11 +265,12 @@ class TrackListViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun init(context: Context){
-        resetActiveTracklist()
+        setViewTrackList(trackList.value!!)
+        resetPlayingTracklist()
         setPlaylists(arrayListOf<Playlist>())
 
         _isRandom.value = true
-        shuffleTracklist()
+        shufflePlayingTracklist()
         setIsPaused(true)
 
         _mediaPlayer.value = MediaPlayer().apply {

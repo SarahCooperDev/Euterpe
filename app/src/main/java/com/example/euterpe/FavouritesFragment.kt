@@ -37,7 +37,8 @@ class FavouritesFragment : Fragment() {
         }
 
         val adapter = TrackListAdapter(TrackListListener { uri ->
-                viewModel.playOnClick(requireContext(), uri)
+                viewModel.setPlayingTracklistToFav()
+                viewModel.playPlaylistOnClick(requireContext(), uri)
             })
 
         binding.favouriteRcv.adapter = adapter
