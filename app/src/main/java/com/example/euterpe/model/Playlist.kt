@@ -8,4 +8,8 @@ class Playlist(id: Long, name: String, members: MutableList<Long>){
     fun addMember(memberId: Long){
         members.add(memberId)
     }
+
+    fun clearMembership(){
+        members.clear()
+    }
 }

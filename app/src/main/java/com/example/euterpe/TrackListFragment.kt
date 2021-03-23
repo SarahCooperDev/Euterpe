@@ -13,17 +13,6 @@ import com.example.euterpe.adapter.TrackListListener
 import com.example.euterpe.databinding.FragmentTrackListBinding
 import com.example.euterpe.model.TrackListViewModel
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [TrackListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class TrackListFragment : Fragment() {
 
     private val viewModel: TrackListViewModel by activityViewModels()

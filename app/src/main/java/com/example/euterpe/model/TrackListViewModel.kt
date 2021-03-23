@@ -1,19 +1,19 @@
 package com.example.euterpe.model
 
-import android.app.Activity
-import android.content.ContentValues
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.SeekBar
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.createMemberInPlaylist
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.deleteMemberInPlaylist
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
 
 class TrackListViewModel : ViewModel() {
     private val _trackList = MutableLiveData<TrackList>()
@@ -122,71 +122,6 @@ class TrackListViewModel : ViewModel() {
         prepareTrack(context, newCurrentTrack.uri)
     }
 
-    fun createPlaylist(activity: Activity, name: String): Long{
-        var cv = ContentValues()
-        var resolver = activity.getContentResolver()
-        cv.put(MediaStore.Audio.Playlists.NAME, name);
-        cv.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
-        cv.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
-        var uri: Uri? = resolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, cv)
-
-        if(uri == null){
-            Log.i("Selection Fragment", "Failed to insert playlist")
-        }
-        var idString = uri!!.lastPathSegment
-        if(idString == null){
-            Log.i("Selection Fragment", "Failed to parse uri last segment")
-        }
-
-        return idString!!.toLong()
-    }
-
-    fun addMemberToPlaylist(context: Context, playlistId: Long){
-        Log.i("Add Member", "Adding member to playlist")
-        var uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
-        var columns = arrayOf<String>(
-            MediaStore.Audio.Playlists.Members.AUDIO_ID,
-            MediaStore.Audio.Playlists.Members.PLAY_ORDER
-        )
-
-        var resolver = context.getContentResolver()
-        var contentValues = ContentValues()
-        var cursor = resolver.query(uri, columns, null, null, null)
-        var playOrder = 0
-
-        if (cursor != null) {
-            cursor.moveToFirst()
-            playOrder = cursor.getInt(0)
-            cursor.close()
-
-            contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, currentTrack.value!!.id);
-            contentValues.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, (playOrder + currentTrack.value!!.id).toInt())
-
-            resolver.insert(uri, contentValues);
-        }
-    }
-
-    fun removeMemberFromPlaylist(context: Context, playlistId: Long){
-        Log.i("Remove member", "Deleting member from playlist")
-        var uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
-        var columns = arrayOf<String>(
-            MediaStore.Audio.Playlists.Members.AUDIO_ID,
-            MediaStore.Audio.Playlists.Members.PLAY_ORDER
-        )
-
-        var resolver = context.getContentResolver()
-        var contentValues = ContentValues()
-        var cursor = resolver.query(uri, columns, null, null, null)
-
-        if(cursor != null){
-            cursor.moveToFirst();
-            var base = cursor.getInt(0)
-            cursor.close()
-
-            resolver.delete(uri, MediaStore.Audio.Playlists.Members.AUDIO_ID + " = " + currentTrack.value!!.id, null);
-        }
-    }
-
     fun switchRandom(){
         if(_isRandom.value!!){
             setIsRandom(false)
@@ -207,10 +142,15 @@ class TrackListViewModel : ViewModel() {
         var playlist = playlists.value!!.find{it.name == "Favourites"}
 
         if(currentTrack.value!!.isFavourited) {
-            addMemberToPlaylist(context, playlist!!.id)
+            createMemberInPlaylist(context, playlist!!.id, currentTrack.value!!)
+            readPlaylistMembers(context, this, playlist!!.id)
         } else {
-            removeMemberFromPlaylist(context, playlist!!.id)
+            deleteMemberInPlaylist(context, playlist!!.id, currentTrack.value!!)
+            readPlaylistMembers(context, this, playlist!!.id)
         }
+
+        var allPlaylists = playlists.value
+        setPlaylists(allPlaylists!!)
 
         Log.i("Favourited", currentTrack.value!!.isFavourited.toString())
     }

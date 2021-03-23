@@ -1,11 +1,9 @@
 package com.example.euterpe
 
-import android.content.ContentUris
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -19,6 +17,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.viewpager2.widget.ViewPager2
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.createPlaylist
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.readMusic
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
+import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylists
 import com.example.euterpe.databinding.FragmentSelectionBinding
 import com.example.euterpe.model.Playlist
 import com.example.euterpe.model.Track
@@ -36,7 +38,7 @@ import layout.SelectionAdapter
  */
 class SelectionFragment : Fragment() {
     data class Audio(val id: Long,
-                    val uri: Uri,
+                     val uri: Uri,
                      val title: String,
                      val artist: String,
                      val album: String,
@@ -47,8 +49,6 @@ class SelectionFragment : Fragment() {
 
     private lateinit var selectionAdapter: SelectionAdapter
     private lateinit var viewPager: ViewPager2
-    private val audioList = mutableListOf<Audio>()
-    private val playlistList = mutableListOf<TempPlay>()
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentSelectionBinding
 
@@ -72,7 +72,6 @@ class SelectionFragment : Fragment() {
 
     private fun showMenu(v: View) {
         PopupMenu(requireActivity(), v).apply {
-            // MainActivity implements OnMenuItemClickListener
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
 
                 when (item!!.itemId) {
@@ -94,107 +93,6 @@ class SelectionFragment : Fragment() {
             })
             inflate(R.menu.orderby_menu)
             show()
-        }
-    }
-
-    private fun loadMusic(){
-        val projection = arrayOf(
-            MediaStore.Audio.AudioColumns._ID,
-            MediaStore.Audio.AudioColumns.TITLE,
-            MediaStore.Audio.AudioColumns.ARTIST,
-            MediaStore.Audio.AudioColumns.ALBUM,
-            MediaStore.Audio.AudioColumns.DATE_ADDED,
-            MediaStore.Audio.AudioColumns.DURATION)
-
-        val sortOrder = "${MediaStore.Audio.AudioColumns.TITLE} ASC"
-
-        val query = context?.contentResolver?.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            null,
-            null,
-            sortOrder
-        )
-
-        query?.use{ cursor ->
-            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
-            val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
-            val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ARTIST)
-            val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ALBUM)
-            val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
-
-            Log.i("Query count", cursor.count.toString())
-
-            if(cursor != null) {
-                if(cursor.moveToFirst()) {
-                    do {
-                        val id = cursor.getLong(idCol)
-                        val name = cursor.getString(nameCol)
-                        val duration = cursor.getInt(durationCol)
-                        val artist = cursor.getString(artistCol)
-                        val album = cursor.getString(albumCol)
-                        val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,id)
-
-                        audioList += Audio(id, contentUri, name, artist, album, duration)
-                    } while(cursor.moveToNext())
-                } else {
-                    Log.i("Query", "Cursor move to first fail")
-                }
-            }
-            else{
-                Log.i("Query", "Cursor is null")
-            }
-        }
-        Log.i("Mediastore", audioList.toString())
-    }
-
-    private fun loadPlaylists(){
-        var playlistProjection = arrayOf(MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME)
-
-        val playlistQuery = context?.contentResolver?.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, playlistProjection, null, null, null)
-
-        playlistQuery?.use { cursor ->
-            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists._ID)
-            val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.NAME)
-
-            Log.i("Playlist Query count", playlistQuery.count.toString())
-
-            if(cursor != null) {
-                if (cursor.moveToFirst()) {
-                    do {
-                        val playlistId = cursor.getLong(idCol)
-                        val playlistName = cursor.getString(nameCol)
-
-                        playlistList += TempPlay(playlistId, playlistName)
-                    } while (cursor.moveToNext())
-                }
-            }
-        }
-        Log.i("Mediastore", playlistList.toString())
-    }
-
-    private fun loadPlaylistMembers(playlistId: Long){
-        var projection = arrayOf(MediaStore.Audio.Playlists.Members.AUDIO_ID, MediaStore.Audio.Playlists.Members.PLAYLIST_ID)
-
-        val query = context?.contentResolver?.query(MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId), projection, null, null, null)
-
-        query?.use { cursor ->
-            val audioIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.AUDIO_ID)
-            val playlistIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.PLAYLIST_ID)
-
-            Log.i("Member Query count", query.count.toString())
-
-            if(cursor != null) {
-                if (cursor.moveToFirst()) {
-                    do {
-                        val audioId = cursor.getLong(audioIdCol)
-                        val playlistId = cursor.getLong(playlistIdCol)
-
-                        var playlist = viewModel.playlists.value!!.find { it.id == playlistId }
-                        playlist!!.addMember(audioId)
-                    } while (cursor.moveToNext())
-                }
-            }
         }
     }
 
@@ -256,8 +154,7 @@ class SelectionFragment : Fragment() {
             }
         }.attach()
 
-        loadMusic()
-
+        var audioList = readMusic(requireContext())
 
         binding?.apply {
             trackListViewModel = viewModel
@@ -273,27 +170,22 @@ class SelectionFragment : Fragment() {
         viewModel.setTrackList(trackList)
         viewModel.init(requireContext())
 
-        loadPlaylists()
-        for (list in playlistList) {
+        var playlistList = readPlaylists(requireContext())
+
+        // Check to make sure the Favourites playlist exists, and creates it if it doesn't
+        if(playlistList.size == 0 && playlistList.any{it.playlistTitle == "Favourites"}){
+            Log.i("Selection Fragment", "There are currently no playlists")
+            var id = createPlaylist(requireActivity(), "Favourites")
+
+            playlistList = readPlaylists(requireContext())
+        }
+
+        for(list in playlistList){
             var memberList: MutableList<Long> = ArrayList()
             var newList = Playlist(list.playlistId, list.playlistTitle, memberList)
             viewModel.addToPlaylist(newList)
 
-            loadPlaylistMembers(list.playlistId)
-        }
-
-        if(viewModel.playlists.value!!.size == 0 && viewModel.playlists.value!!.any{it.name == "Favourites"}){
-            Log.i("Selection Fragment", "There are currently no playlists")
-            viewModel.createPlaylist(requireActivity(), "Favourites")
-
-            loadPlaylists()
-            for (list in playlistList) {
-                var memberList: MutableList<Long> = ArrayList()
-                var newList = Playlist(list.playlistId, list.playlistTitle, memberList)
-                viewModel.addToPlaylist(newList)
-
-                loadPlaylistMembers(list.playlistId)
-            }
+            readPlaylistMembers(requireContext(), viewModel, list.playlistId)
         }
     }
 
@@ -303,17 +195,7 @@ class SelectionFragment : Fragment() {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SelectionFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance() = SelectionFragment().apply { }
     }
-
 }
