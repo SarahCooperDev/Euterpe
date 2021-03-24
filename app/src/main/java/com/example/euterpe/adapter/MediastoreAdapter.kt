@@ -41,6 +41,7 @@ class MediastoreAdapter{
                 val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
                 val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ARTIST)
                 val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.ALBUM)
+                val dateCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_ADDED)
                 val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
 
                 Log.i("Query count", cursor.count.toString())
@@ -53,6 +54,7 @@ class MediastoreAdapter{
                             val duration = cursor.getInt(durationCol)
                             val artist = cursor.getString(artistCol)
                             val album = cursor.getString(albumCol)
+                            val dateAdded = cursor.getLong(dateCol)
                             val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,id)
 
                             audioList += SelectionFragment.Audio(
@@ -61,6 +63,7 @@ class MediastoreAdapter{
                                 name,
                                 artist,
                                 album,
+                                dateAdded,
                                 duration
                             )
                         } while(cursor.moveToNext())

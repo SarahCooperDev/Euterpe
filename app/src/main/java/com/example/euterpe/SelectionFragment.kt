@@ -42,6 +42,7 @@ class SelectionFragment : Fragment() {
                      val title: String,
                      val artist: String,
                      val album: String,
+                     val dateAdded: Long,
                      val duration: Int)
 
     data class TempPlay(val playlistId: Long,
@@ -124,7 +125,6 @@ class SelectionFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.i("Selection Fragment", "Selection Fragment on view created")
         selectionAdapter = SelectionAdapter(this)
         viewPager = view.findViewById(R.id.selection_pager)
         viewPager.adapter = selectionAdapter
@@ -149,7 +149,7 @@ class SelectionFragment : Fragment() {
         var trackList = TrackList()
 
         for (track in audioList) {
-            var newTrack = Track(track.id, track.uri, track.title, track.artist, track.album, track.duration)
+            var newTrack = Track(track.id, track.uri, track.title, track.artist, track.album, track.dateAdded, track.duration)
             trackList.addTrack(newTrack)
         }
 

@@ -174,7 +174,15 @@ class TrackListViewModel : ViewModel() {
                 }
             }
             "Recently" -> {
-
+                if(_currentOrder.value!! == "Recently") {
+                    setCurrentOrder("Reverse Recently")
+                    _viewTrackList.value!!.trackList.sortBy { it.dateAdded }
+                    setViewTrackList(_viewTrackList.value!!)
+                } else {
+                    setCurrentOrder("Recently")
+                    _viewTrackList.value!!.trackList.sortByDescending { it.dateAdded }
+                    setViewTrackList(_viewTrackList.value!!)
+                }
             }
         }
 
