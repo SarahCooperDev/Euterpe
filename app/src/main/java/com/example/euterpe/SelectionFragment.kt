@@ -1,12 +1,15 @@
 package com.example.euterpe
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.*
 import android.widget.ImageButton
@@ -52,10 +55,12 @@ class SelectionFragment : Fragment() {
     private lateinit var viewPager: ViewPager2
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentSelectionBinding
+    private var menuItemChecked: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        menuItemChecked = 0
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -72,20 +77,72 @@ class SelectionFragment : Fragment() {
     }
 
     private fun showMenu(v: View) {
-        PopupMenu(requireActivity(), v).apply {
+        var contextWrapper = ContextThemeWrapper(requireContext(), R.style.EuterpeTheme_Popup)
+        PopupMenu(contextWrapper, v).apply {
+
+            Log.i("Show Menu", "Showing menu construction")
+
+            var menuSize = this.menu.size()
+
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
                 viewModel.reorderTracklist(item!!.title.toString())
+
+                Log.i("Selection Fragment", item.isChecked.toString())
+                item.setChecked(true)
+
+                when(item!!.itemId){
+                    R.id.menu_alphabetical -> {
+                        Log.i("Selection Fragment", "Alpha")
+                        menuItemChecked = 0
+                    } R.id.menu_artist -> {
+                        Log.i("Selection Fragment", "Artist")
+                        menuItemChecked = 1
+                    } R.id.menu_album -> {
+                        Log.i("Selection Fragment", "Album")
+                        menuItemChecked = 2
+                    } R.id.menu_recently -> {
+                        Log.i("Selection Fragment", "Recently")
+                        menuItemChecked = 3
+                    }
+                }
                 true
             })
+
             inflate(R.menu.orderby_menu)
-            show()
+            this.show()
+
+            menuSize = this.menu.size()
+
+            Log.i("Show Menu", this.menu.size().toString())
+            Log.i("Show Menu", this.menu.getItem(0).toString())
+
+            var menuitem = this.menu.getItem(menuItemChecked)
+            this.menu.getItem(menuItemChecked).setChecked(true)
+
+            //this.menu.getItem(menuItemChecked).setIcon(R.drawable.orderby_background_selector)
+            val s = SpannableString(menuitem.title)
+            s.setSpan(ForegroundColorSpan(Color.parseColor("#6d6d6d")), 0, s.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            s.setSpan(StyleSpan(Typeface.BOLD_ITALIC), 0, s.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            s.setSpan(UnderlineSpan(), 0, s.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+
+            this.menu.getItem(menuItemChecked).setTitle(s)
         }
+    }
+
+    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+
+        Log.i("Context", "Calling context menu")
+
+        menu.getItem(menuItemChecked).setChecked(true)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.app_menu, menu)
         var menuItem = menu.findItem(R.id.randomise_btn)
         var title = menuItem.getTitle().toString()
+
+        Log.i("Options Menu", "Calling options menu creation")
 
         if (title != null) {
             val s = SpannableString(title)

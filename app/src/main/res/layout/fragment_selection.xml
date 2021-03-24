@@ -38,6 +38,7 @@
                 android:background="@mipmap/ic_orderby_foreground"
                 android:contentDescription="kebab menu"
                 android:onClick="showMenu"
+                style="@style/EuterpeTheme.PopupOverlay"
                 android:layout_margin="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 ></ImageButton>

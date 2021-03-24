@@ -1,10 +1,34 @@
 <resources>
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="EuterpeTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:itemBackground">@color/colorOrange</item>
+        <item name="android:listViewStyle">@style/EuterpeTheme.ListView</item>
+    </style>
+    
+    <style name="EuterpeTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:colorBackground">@color/colorPrimaryDark</item>
+        <item name="colorControlHighlight">@color/colorAccent</item>
+        <item name="itemIconTint">@color/colorOrange</item>
+        <item name="itemTextColor">@color/colorGrey</item>
+        <item name="itemBackground">@color/colorLightBlack</item>
+    </style>
+
+    <style name="EuterpeTheme.ListView" parent="@android:style/Widget.ListView.White">
+        <item name="android:background">@color/colorLightBlack</item>
+        <item name="android:listSelector">@drawable/orderby_menu_selector</item>
+    </style>
+
+    <style name="EuterpeTheme.Popup" parent="@android:style/Widget.PopupMenu">
+        <item name="color">@drawable/orderby_menu_selector</item>
+        <item name="android:background">@drawable/orderby_menu_selector</item>
+        <item name="android:popupBackground">@drawable/orderby_menu_selector</item>
+        <item name="android:popupMenuStyle">@drawable/orderby_menu_selector</item>
+        <item name="popupMenuBackground">@drawable/orderby_menu_selector</item>
+        <item name="popupMenuStyle">@drawable/orderby_menu_selector</item>
+        <item name="itemBackground">@drawable/orderby_menu_selector</item>
     </style>
 
 </resources>
