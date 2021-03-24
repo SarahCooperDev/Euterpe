@@ -31,6 +31,12 @@ class TrackListViewModel : ViewModel() {
     private val _currentIndex = MutableLiveData<Int>()
     val currentIndex: LiveData<Int> = _currentIndex
 
+    private var _currentOrder = MutableLiveData<String>()
+    var currentOrder: LiveData<String> = _currentOrder
+
+    private var _currentPlaylist = MutableLiveData<String>()
+    var currentPlaylist: LiveData<String> = _currentPlaylist
+
     private var _mediaPlayer = MutableLiveData<MediaPlayer>()
     var mediaPlayer: LiveData<MediaPlayer> = _mediaPlayer
 
@@ -53,6 +59,14 @@ class TrackListViewModel : ViewModel() {
 
     fun setTrackList(tracks: TrackList){
         _trackList.value = tracks
+    }
+
+    fun setCurrentOrder(order: String){
+        _currentOrder.value = order
+    }
+
+    fun setCurrentPlaylist(current: String){
+        _currentPlaylist.value = current
     }
 
     fun setViewTrackList(tracks: TrackList){
@@ -121,6 +135,61 @@ class TrackListViewModel : ViewModel() {
         setCurrentIndex(index)
     }
 
+    fun reorderTracklist(order: String){
+        Log.i("Reordering", "Reordering tracklist")
+        Log.i("Reordering", order.toString())
+        Log.i("Reordering", _currentOrder.value!!.toString())
+        when (order) {
+            "Alphabetical" -> {
+                if(_currentOrder.value!! == "Alphabetical") {
+                    setCurrentOrder("Reverse Alphabetical")
+                     _viewTrackList.value!!.trackList.sortByDescending { it.title }
+                    setViewTrackList(_viewTrackList.value!!)
+                } else {
+                    setCurrentOrder("Alphabetical")
+                    _viewTrackList.value!!.trackList.sortBy { it.title }
+                    setViewTrackList(_viewTrackList.value!!)
+                }
+            }
+            "Artist" -> {
+                if(_currentOrder.value!! == "Artist") {
+                    setCurrentOrder("Reverse Artist")
+                    _viewTrackList.value!!.trackList.sortByDescending { it.artist }
+                    setViewTrackList(_viewTrackList.value!!)
+                } else {
+                    setCurrentOrder("Artist")
+                    _viewTrackList.value!!.trackList.sortBy { it.artist }
+                    setViewTrackList(_viewTrackList.value!!)
+                }
+            }
+            "Album" -> {
+                if(_currentOrder.value!! == "Album") {
+                    setCurrentOrder("Reverse Album")
+                    _viewTrackList.value!!.trackList.sortByDescending { it.album }
+                    setViewTrackList(_viewTrackList.value!!)
+                } else {
+                    setCurrentOrder("Album")
+                    _viewTrackList.value!!.trackList.sortBy { it.album }
+                    setViewTrackList(_viewTrackList.value!!)
+                }
+            }
+            "Recently" -> {
+
+            }
+        }
+
+        if(!_isRandom.value!!){
+            Log.i("TrackList ViewModel", "Is not random")
+            val currentTrack = _currentTrack.value!!
+            setPlayingTrackList(_viewTrackList.value!!)
+
+            var index = _playingTrackList.value!!.trackList.indexOf(currentTrack)
+            setCurrentTrack(currentTrack)
+            setCurrentIndex(index)
+        }
+
+    }
+
     fun setPlayingTracklistToFav(){
         resetPlayingTracklist()
 
@@ -154,7 +223,6 @@ class TrackListViewModel : ViewModel() {
     }
 
     fun toggleFavouriteTrack(context: Context){
-        Log.i("Favourited", currentTrack.value!!.isFavourited.toString())
         currentTrack.value!!.isFavourited = !currentTrack.value!!.isFavourited
         var playlist = playlists.value!!.find{it.name == "Favourites"}
 
@@ -284,6 +352,8 @@ class TrackListViewModel : ViewModel() {
         setPlaylists(arrayListOf<Playlist>())
 
         _isRandom.value = true
+        _currentPlaylist.value = "Tracks"
+        _currentOrder.value = "Alphabetical"
         shufflePlayingTracklist()
         setIsPaused(true)
 

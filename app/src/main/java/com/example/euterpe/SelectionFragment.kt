@@ -73,22 +73,7 @@ class SelectionFragment : Fragment() {
     private fun showMenu(v: View) {
         PopupMenu(requireActivity(), v).apply {
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
-
-                when (item!!.itemId) {
-                    R.id.menu_alphabetical -> {
-                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
-                    }
-                    R.id.menu_artist -> {
-                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
-                    }
-                    R.id.menu_album -> {
-                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
-                    }
-                    R.id.menu_recently -> {
-                        Toast.makeText(requireActivity(), item.title, Toast.LENGTH_SHORT).show()
-                    }
-                }
-
+                viewModel.reorderTracklist(item!!.title.toString())
                 true
             })
             inflate(R.menu.orderby_menu)
@@ -131,6 +116,7 @@ class SelectionFragment : Fragment() {
 
         when(id) {
             R.id.randomise_btn -> randomise(item)
+            R.id.search_btn -> Toast.makeText(requireContext(), "Searching...", Toast.LENGTH_SHORT)
         }
 
         return true

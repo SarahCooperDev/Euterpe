@@ -27,14 +27,15 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 app:tabMode="scrollable"
+                app:tabGravity="center"
                 app:tabTextColor="@color/colorOrange">
             </com.google.android.material.tabs.TabLayout>
 
             <ImageButton
                 android:id="@+id/orderby_menu_btn"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@mipmap/ic_orderby_round"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@mipmap/ic_orderby_foreground"
                 android:contentDescription="kebab menu"
                 android:onClick="showMenu"
                 android:layout_margin="10dp"

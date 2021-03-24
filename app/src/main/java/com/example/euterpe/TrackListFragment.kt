@@ -1,6 +1,7 @@
 package com.example.euterpe
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,13 +33,16 @@ class TrackListFragment : Fragment() {
 
         val adapter =
             TrackListAdapter(TrackListListener { uri ->
+                viewModel.setCurrentPlaylist("Tracks")
                 viewModel.playOnClick(requireContext(), uri)
             })
 
         binding.trackListRcv.adapter = adapter
         viewModel.viewTrackList.observe(viewLifecycleOwner, Observer{
             it?.let{
+                Log.i("Track List Fragment", "Tracklist observer triggered")
                 adapter.submitList(it.trackList)
+                adapter.notifyDataSetChanged()
             }
         })
 

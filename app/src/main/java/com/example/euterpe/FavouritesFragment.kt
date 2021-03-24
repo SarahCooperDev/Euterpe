@@ -1,7 +1,6 @@
 package com.example.euterpe
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -37,6 +36,7 @@ class FavouritesFragment : Fragment() {
         }
 
         val adapter = TrackListAdapter(TrackListListener { uri ->
+                viewModel.setCurrentPlaylist("Favourites")
                 viewModel.setPlayingTracklistToFav()
                 viewModel.playPlaylistOnClick(requireContext(), uri)
             })
@@ -45,15 +45,21 @@ class FavouritesFragment : Fragment() {
 
         viewModel.playlists.observe(viewLifecycleOwner, Observer{
             it?.let{
-                Log.i("Favourites Fragment", "Retrieving favourites playlist")
-
                 var favouritePlaylist = viewModel.playlists.value!!.find{it.name == "Favourites"}
-                Log.i("Favourites Fragment", favouritePlaylist.toString())
-
                 var favouriteList = viewModel.trackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
-                Log.i("Favourites Fragment", favouriteList.toString())
 
                 adapter.submitList(favouriteList)
+                adapter.notifyDataSetChanged()
+            }
+        })
+
+        viewModel.viewTrackList.observe(viewLifecycleOwner, Observer {
+            it?.let{
+                var favouritePlaylist = viewModel.playlists.value!!.find{it.name == "Favourites"}
+                var favouriteList = viewModel.viewTrackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
+
+                adapter.submitList(favouriteList)
+                adapter.notifyDataSetChanged()
             }
         })
 
