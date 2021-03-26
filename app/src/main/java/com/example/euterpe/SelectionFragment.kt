@@ -1,10 +1,19 @@
 package com.example.euterpe
 
+import android.app.NotificationManager
+import android.bluetooth.BluetoothAdapter
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.Typeface
+import android.media.MediaMetadata
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -16,10 +25,14 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
+import com.example.euterpe.adapter.BluetoothController
+import com.example.euterpe.adapter.MediaService.Companion.sendNotification
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.createPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readMusic
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
@@ -51,24 +64,57 @@ class SelectionFragment : Fragment() {
     data class TempPlay(val playlistId: Long,
                         val playlistTitle: String)
 
+    val ACTION_PLAY = "action_play"
+    val ACTION_PAUSE = "action_pause"
+    val ACTION_REWIND = "action_rewind"
+    val ACTION_FAST_FORWARD = "action_fast_foward"
+    val ACTION_NEXT = "action_next"
+    val ACTION_PREVIOUS = "action_previous"
+    val ACTION_STOP = "action_stop"
     private lateinit var selectionAdapter: SelectionAdapter
     private lateinit var viewPager: ViewPager2
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentSelectionBinding
     private var menuItemChecked: Int = 0
+    lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var mediaSession: MediaSessionCompat
+    private val notificationChannel: String = "EuterpeChannel"
+
+    private val audioReceiver: BroadcastReceiver = object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i("Broadcast Receiver", "In Local Media Receiver")
+
+            if(ACTION_PAUSE == intent!!.action){
+                Log.i("Broadcast Receiver", "Pause Button")
+            } else if(ACTION_PREVIOUS == intent!!.action){
+                Log.i("Broadcast Receiver", "Previous Button")
+            } else if(ACTION_NEXT == intent!!.action){
+                Log.i("Broadcast Receiver", "Next Button")
+            } else {
+                Log.i("Broadcast Receiver", "Couldn't categorise intent")
+            }
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         menuItemChecked = 0
+        var lbm = LocalBroadcastManager.getInstance(requireContext())
+        lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PAUSE))
+        lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PREVIOUS))
+        lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_NEXT))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_selection, container, false);
         val view: View = binding.root
 
-        val popupButton = view.findViewById<View>(R.id.orderby_menu_btn) as ImageButton
+        //BluetoothController.getBluetoothAdapter()!!
+        //BluetoothController.getProxy(requireContext())
 
+        val popupButton = view.findViewById<View>(R.id.orderby_menu_btn) as ImageButton
         popupButton.setOnClickListener { v ->
             this.showMenu(v)
         }
@@ -91,19 +137,10 @@ class SelectionFragment : Fragment() {
                 item.setChecked(true)
 
                 when(item!!.itemId){
-                    R.id.menu_alphabetical -> {
-                        Log.i("Selection Fragment", "Alpha")
-                        menuItemChecked = 0
-                    } R.id.menu_artist -> {
-                        Log.i("Selection Fragment", "Artist")
-                        menuItemChecked = 1
-                    } R.id.menu_album -> {
-                        Log.i("Selection Fragment", "Album")
-                        menuItemChecked = 2
-                    } R.id.menu_recently -> {
-                        Log.i("Selection Fragment", "Recently")
-                        menuItemChecked = 3
-                    }
+                    R.id.menu_alphabetical -> { menuItemChecked = 0
+                    } R.id.menu_artist -> { menuItemChecked = 1
+                    } R.id.menu_album -> { menuItemChecked = 2
+                    } R.id.menu_recently -> { menuItemChecked = 3 }
                 }
                 true
             })
@@ -230,11 +267,33 @@ class SelectionFragment : Fragment() {
 
             readPlaylistMembers(requireContext(), viewModel, list.playlistId)
         }
+
+        var mediaController = MediaController()
+        mediaController.viewModel = viewModel
+
+        mediaSession = MediaSessionCompat(requireContext(), "BluetoothService")
+        Log.i("Selection Fragment", "Created Media session")
+        mediaSession.setMetadata(
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, viewModel.currentTrack.value!!.title)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, viewModel.currentTrack.value!!.artist)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, viewModel.currentTrack.value!!.duration.toLong())
+                .build())
+
+        Log.i("Selection Fragment", "Set metadata")
+
+        val notificationManager = ContextCompat.getSystemService(requireContext(), NotificationManager::class.java) as NotificationManager
+        notificationManager.sendNotification("Euterpe app", requireContext(), mediaSession, this.audioReceiver)
+
+        Log.i("Selection Fragment", "Creating media session")
+        //val mediaStyle = NotificationCompat.MediaStyle().setMediaSession(mediaSession.sessionToken)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         viewModel.mediaPlayer.value!!.release()
+        BluetoothController.closeA2dpProxy(bluetoothAdapter, BluetoothController.bluetoothA2dp)
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(this.audioReceiver)
     }
 
     companion object {

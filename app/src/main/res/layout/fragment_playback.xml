@@ -40,14 +40,6 @@
                 android:textColor="@color/colorOrange"
                 android:gravity="center_horizontal"
                 android:text="@{trackListViewModel.currentTrack.artist}" />
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="16dp"
-                android:layout_marginTop="10dp"
-                android:textColor="@color/colorOrange"
-                android:gravity="center_horizontal"
-                android:text="@{String.valueOf(trackListViewModel.currentTrack.dateAdded)}" />
 
             <TextView
                 android:layout_width="match_parent"

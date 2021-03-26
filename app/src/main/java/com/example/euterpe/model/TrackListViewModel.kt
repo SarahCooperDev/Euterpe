@@ -1,6 +1,8 @@
 package com.example.euterpe.model
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
@@ -14,6 +16,7 @@ import androidx.lifecycle.ViewModel
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.createMemberInPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.deleteMemberInPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
+
 
 class TrackListViewModel : ViewModel() {
     private val _trackList = MutableLiveData<TrackList>()

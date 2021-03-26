@@ -20,6 +20,7 @@
 
     <fragment
         android:id="@+id/selection_fragment"
+        android:tag="selectionFragment"
         android:name="com.example.euterpe.SelectionFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
