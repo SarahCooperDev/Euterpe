@@ -13,6 +13,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import com.example.euterpe.controller.AudioController
 import com.example.euterpe.databinding.FragmentPlaybackBinding
 import com.example.euterpe.model.TrackListViewModel
 
@@ -44,7 +45,7 @@ class PlaybackFragment : Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
 
         binding.playpausePlaybackBtn.setOnClickListener{
-            viewModel.playbackTrack(requireContext())
+            AudioController.playbackTrack(requireContext(), viewModel)
         }
 
         binding.isFavouritedBtn.setOnClickListener {
@@ -82,11 +83,11 @@ class PlaybackFragment : Fragment() {
         })
 
         binding.previousPlaybackBtn.setOnClickListener{
-            viewModel.playPreviousTrack(requireContext())
+            AudioController.playPreviousTrack(requireContext(), viewModel)
         }
 
         binding.nextPlaybackBtn.setOnClickListener{
-            viewModel.playNextTrack(requireContext())
+            AudioController.playNextTrack(requireContext(), viewModel)
         }
 
         binding.durationSeekbar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
@@ -117,14 +118,6 @@ class PlaybackFragment : Fragment() {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PlaybackFragment.
-         */
         @JvmStatic
         fun newInstance() = PlaybackFragment().apply { }
     }

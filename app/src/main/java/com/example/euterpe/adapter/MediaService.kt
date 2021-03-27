@@ -1,5 +1,6 @@
 package com.example.euterpe.adapter
 
+import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -14,7 +15,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.euterpe.MainActivity
 import com.example.euterpe.R
-import androidx.media.app.NotificationCompat as MediaNotification
 
 class MediaService{
 
@@ -37,46 +37,54 @@ class MediaService{
         private val notificationChannel: String = "EuterpeChannel"
 
 
-        fun NotificationManager.sendNotification(messageBody: String, context: Context, mediaSession: MediaSessionCompat, audioReceiver: BroadcastReceiver){
+        @SuppressLint("RestrictedApi")
+        fun NotificationManager.sendNotification(messageTitle: String, messageBody: String, context: Context, mediaSession: MediaSessionCompat, audioReceiver: BroadcastReceiver, builder: NotificationCompat.Builder?, isPaused: Boolean){
             Log.i("Media Service", "Send notification")
             val contentIntent = Intent(context, MainActivity::class.java)
             val contentPendingIntent = PendingIntent.getActivity(context, NOTIFICATION_ID, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
+            builder!!.setContentTitle(messageTitle)
+            builder!!.setContentText(messageBody)
+            builder!!.setContentIntent(contentPendingIntent)
+
+            builder!!.mActions.clear()
+            builder!!.addAction(R.mipmap.ic_previous_btn_dark_foreground, "Previous", getActionIntent(context, ACTION_PREVIOUS))
+
+            if(isPaused){
+                builder!!.addAction(R.mipmap.ic_play_btn_dark_foreground, "Play", getActionIntent(context, ACTION_PLAY))
+            } else {
+                builder!!.addAction(R.mipmap.ic_pause_btn_dark_foreground, "Pause", getActionIntent(context, ACTION_PAUSE))
+            }
+
+            builder!!.addAction(R.mipmap.ic_next_btn_dark_foreground, "Next", getActionIntent(context, ACTION_NEXT))
+
+            Log.i("Media Service", "Notify")
+            notify(NOTIFICATION_ID, builder!!.build())
+        }
+
+        fun getActionIntent(context: Context, action: String): PendingIntent{
+            val intent = Intent(context, MediaReceiver::class.java)
+            intent.action = action
+            return PendingIntent.getBroadcast(context, 0, intent, 0)
+        }
+
+        fun generateBaseBuilder(context: Context, mediaSession: MediaSessionCompat): NotificationCompat.Builder{
             val eggImage = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
             val bigPicStyle = NotificationCompat.BigPictureStyle().bigPicture(eggImage).bigLargeIcon(null)
 
-            val pauseIntent = Intent(context, MediaReceiver::class.java)
-            pauseIntent.action = ACTION_PAUSE
-            val pendingPauseMediaReceiver = PendingIntent.getBroadcast(context, 0, pauseIntent, 0)
-
-            val nextIntent = Intent(context, MediaReceiver::class.java)
-            nextIntent.action = ACTION_NEXT
-            val pendingNextMediaReceiver = PendingIntent.getBroadcast(context, 0, nextIntent, 0)
-
-            val previousIntent = Intent(context, MediaReceiver::class.java)
-            previousIntent.action = ACTION_PREVIOUS
-            val pendingPreviousMediaReceiver = PendingIntent.getBroadcast(context, 0, previousIntent, 0)
-
-            val builder = NotificationCompat.Builder(context, notificationChannel)
+            var builder = NotificationCompat.Builder(context, notificationChannel)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Euterpe")
-                .setContentText(messageBody)
-                .setContentIntent(contentPendingIntent)
-                .setAutoCancel(true)
                 .setStyle(bigPicStyle)
                 .setLargeIcon(eggImage)
+                .setAutoCancel(false)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setStyle(MediaNotification.MediaStyle()
-                    .setShowActionsInCompactView(0,1,2)
-                    .setMediaSession(mediaSession.sessionToken))
-                .addAction(R.mipmap.ic_previous_btn_dark_foreground, "Previous", pendingPreviousMediaReceiver)
-                .addAction(R.mipmap.ic_pause_btn_dark_foreground, "Pause", pendingPauseMediaReceiver)
-                .addAction(R.mipmap.ic_next_btn_dark_foreground, "Next", pendingNextMediaReceiver)
+                .setOnlyAlertOnce(true)
+                .setStyle(
+                    androidx.media.app.NotificationCompat.MediaStyle()
+                        .setShowActionsInCompactView(0,1,2)
+                        .setMediaSession(mediaSession.sessionToken))
 
-            cancelNotifications()
-
-            Log.i("Media Service", "Notify")
-            notify(NOTIFICATION_ID, builder.build())
+            return builder
         }
 
         fun NotificationManager.cancelNotifications(){

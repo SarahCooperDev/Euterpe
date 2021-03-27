@@ -25,18 +25,23 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
 import com.example.euterpe.adapter.BluetoothController
+import com.example.euterpe.adapter.MediaService
+import com.example.euterpe.adapter.MediaService.Companion.cancelNotifications
 import com.example.euterpe.adapter.MediaService.Companion.sendNotification
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.createPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readMusic
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylists
+import com.example.euterpe.controller.AudioController
 import com.example.euterpe.databinding.FragmentSelectionBinding
 import com.example.euterpe.model.Playlist
 import com.example.euterpe.model.Track
@@ -46,12 +51,6 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import layout.SelectionAdapter
 
-
-/**
- * A simple [Fragment] subclass.
- * Use the [SelectionFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class SelectionFragment : Fragment() {
     data class Audio(val id: Long,
                      val uri: Uri,
@@ -71,6 +70,8 @@ class SelectionFragment : Fragment() {
     val ACTION_NEXT = "action_next"
     val ACTION_PREVIOUS = "action_previous"
     val ACTION_STOP = "action_stop"
+    private val NOTIFICATION_ID = 0
+
     private lateinit var selectionAdapter: SelectionAdapter
     private lateinit var viewPager: ViewPager2
     private val viewModel: TrackListViewModel by activityViewModels()
@@ -79,19 +80,33 @@ class SelectionFragment : Fragment() {
     lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var mediaSession: MediaSessionCompat
     private val notificationChannel: String = "EuterpeChannel"
+    private var notificationManager: NotificationManager? = null
+    private var builder: NotificationCompat.Builder? = null
 
     private val audioReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i("Broadcast Receiver", "In Local Media Receiver")
+            Log.i("Broadcast Receiver", "In Local Media Receiver with " + intent!!.action)
 
-            if(ACTION_PAUSE == intent!!.action){
-                Log.i("Broadcast Receiver", "Pause Button")
-            } else if(ACTION_PREVIOUS == intent!!.action){
-                Log.i("Broadcast Receiver", "Previous Button")
-            } else if(ACTION_NEXT == intent!!.action){
-                Log.i("Broadcast Receiver", "Next Button")
-            } else {
-                Log.i("Broadcast Receiver", "Couldn't categorise intent")
+            when {
+                ACTION_PAUSE == intent!!.action -> {
+                    AudioController.playbackTrack(requireContext(), viewModel)
+                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
+                }
+                ACTION_PREVIOUS == intent!!.action -> {
+                    AudioController.playPreviousTrack(requireContext(), viewModel)
+                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
+                }
+                ACTION_NEXT == intent!!.action -> {
+                    AudioController.playNextTrack(requireContext(), viewModel)
+                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
+                }
+                ACTION_PLAY == intent!!.action -> {
+                    AudioController.playbackTrack(requireContext(), viewModel)
+                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
+                }
+                else -> {
+                    Log.i("Broadcast Receiver", "Couldn't categorise intent")
+                }
             }
         }
 
@@ -103,6 +118,7 @@ class SelectionFragment : Fragment() {
         menuItemChecked = 0
         var lbm = LocalBroadcastManager.getInstance(requireContext())
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PAUSE))
+        lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PLAY))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PREVIOUS))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_NEXT))
     }
@@ -110,9 +126,6 @@ class SelectionFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_selection, container, false);
         val view: View = binding.root
-
-        //BluetoothController.getBluetoothAdapter()!!
-        //BluetoothController.getProxy(requireContext())
 
         val popupButton = view.findViewById<View>(R.id.orderby_menu_btn) as ImageButton
         popupButton.setOnClickListener { v ->
@@ -125,9 +138,6 @@ class SelectionFragment : Fragment() {
     private fun showMenu(v: View) {
         var contextWrapper = ContextThemeWrapper(requireContext(), R.style.EuterpeTheme_Popup)
         PopupMenu(contextWrapper, v).apply {
-
-            Log.i("Show Menu", "Showing menu construction")
-
             var menuSize = this.menu.size()
 
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
@@ -148,15 +158,9 @@ class SelectionFragment : Fragment() {
             inflate(R.menu.orderby_menu)
             this.show()
 
-            menuSize = this.menu.size()
-
-            Log.i("Show Menu", this.menu.size().toString())
-            Log.i("Show Menu", this.menu.getItem(0).toString())
-
             var menuitem = this.menu.getItem(menuItemChecked)
             this.menu.getItem(menuItemChecked).setChecked(true)
 
-            //this.menu.getItem(menuItemChecked).setIcon(R.drawable.orderby_background_selector)
             val s = SpannableString(menuitem.title)
             s.setSpan(ForegroundColorSpan(Color.parseColor("#6d6d6d")), 0, s.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
             s.setSpan(StyleSpan(Typeface.BOLD_ITALIC), 0, s.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
@@ -168,9 +172,6 @@ class SelectionFragment : Fragment() {
 
     override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
         super.onCreateContextMenu(menu, v, menuInfo)
-
-        Log.i("Context", "Calling context menu")
-
         menu.getItem(menuItemChecked).setChecked(true)
     }
 
@@ -178,8 +179,6 @@ class SelectionFragment : Fragment() {
         inflater.inflate(R.menu.app_menu, menu)
         var menuItem = menu.findItem(R.id.randomise_btn)
         var title = menuItem.getTitle().toString()
-
-        Log.i("Options Menu", "Calling options menu creation")
 
         if (title != null) {
             val s = SpannableString(title)
@@ -190,7 +189,6 @@ class SelectionFragment : Fragment() {
     }
 
     private fun randomise(item: MenuItem){
-        Log.i("Selection Fragment", "Randomising")
         viewModel.switchRandom()
         var title = item.getTitle().toString()
         var color = "#ab000d"
@@ -215,6 +213,22 @@ class SelectionFragment : Fragment() {
         }
 
         return true
+    }
+
+    private fun setupMediaSession(){
+        mediaSession = MediaSessionCompat(requireContext(), "BluetoothService")
+        mediaSession.setMetadata(
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, viewModel.currentTrack.value!!.title)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, viewModel.currentTrack.value!!.artist)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, viewModel.currentTrack.value!!.duration.toLong())
+                .build())
+
+        builder = MediaService.generateBaseBuilder(requireContext(), mediaSession)
+
+        notificationManager = ContextCompat.getSystemService(requireContext(), NotificationManager::class.java) as NotificationManager
+        notificationManager!!.cancelNotifications()
+        notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this.audioReceiver, builder, viewModel.isPaused.value!!)
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -268,25 +282,15 @@ class SelectionFragment : Fragment() {
             readPlaylistMembers(requireContext(), viewModel, list.playlistId)
         }
 
-        var mediaController = MediaController()
-        mediaController.viewModel = viewModel
+        setupMediaSession()
 
-        mediaSession = MediaSessionCompat(requireContext(), "BluetoothService")
-        Log.i("Selection Fragment", "Created Media session")
-        mediaSession.setMetadata(
-            MediaMetadataCompat.Builder()
-                .putString(MediaMetadata.METADATA_KEY_TITLE, viewModel.currentTrack.value!!.title)
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, viewModel.currentTrack.value!!.artist)
-                .putLong(MediaMetadata.METADATA_KEY_DURATION, viewModel.currentTrack.value!!.duration.toLong())
-                .build())
+        viewModel.isPaused.observe(viewLifecycleOwner, Observer {
+            notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, audioReceiver, builder,viewModel.isPaused.value!!)
+        })
 
-        Log.i("Selection Fragment", "Set metadata")
-
-        val notificationManager = ContextCompat.getSystemService(requireContext(), NotificationManager::class.java) as NotificationManager
-        notificationManager.sendNotification("Euterpe app", requireContext(), mediaSession, this.audioReceiver)
-
-        Log.i("Selection Fragment", "Creating media session")
-        //val mediaStyle = NotificationCompat.MediaStyle().setMediaSession(mediaSession.sessionToken)
+        viewModel.currentTrack.observe(viewLifecycleOwner, Observer {
+            notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, audioReceiver, builder,viewModel.isPaused.value!!)
+        })
     }
 
     override fun onDestroy() {
@@ -294,6 +298,7 @@ class SelectionFragment : Fragment() {
         viewModel.mediaPlayer.value!!.release()
         BluetoothController.closeA2dpProxy(bluetoothAdapter, BluetoothController.bluetoothA2dp)
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(this.audioReceiver)
+        notificationManager!!.cancelNotifications()
     }
 
     companion object {

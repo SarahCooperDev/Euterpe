@@ -10,14 +10,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import com.example.euterpe.controller.AudioController
 import com.example.euterpe.databinding.FragmentCurrentTrackBinding
 import com.example.euterpe.model.TrackListViewModel
 
-/**
- * A simple [Fragment] subclass.
- * Use the [CurrentTrackFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class CurrentTrackFragment : Fragment() {
 
     private val viewModel: TrackListViewModel by activityViewModels()
@@ -33,14 +29,11 @@ class CurrentTrackFragment : Fragment() {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_current_track, container, false);
         val view: View = binding.root
 
-        binding?.apply{
-            trackListViewModel = viewModel
-        }
-
+        binding?.apply{ trackListViewModel = viewModel }
         binding.lifecycleOwner = viewLifecycleOwner
 
         binding.playbackBtn.setOnClickListener{
-            viewModel.playbackTrack(requireContext())
+            AudioController.playbackTrack(requireContext(), viewModel)
         }
 
         viewModel.isPaused.observe(viewLifecycleOwner, Observer {
@@ -52,11 +45,11 @@ class CurrentTrackFragment : Fragment() {
         })
 
         binding.previousBtn.setOnClickListener{
-            viewModel.playPreviousTrack(requireContext())
+            AudioController.playPreviousTrack(requireContext(), viewModel)
         }
 
         binding.nextBtn.setOnClickListener{
-            viewModel.playNextTrack(requireContext())
+            AudioController.playNextTrack(requireContext(), viewModel)
         }
 
         return view

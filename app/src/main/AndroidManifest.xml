@@ -38,6 +38,7 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="PAUSE_ACTION"/>
+                <action android:name="PLAY_ACTION"/>
                 <action android:name="PREVIOUS_ACTION"/>
                 <action android:name="NEXT_ACTION"/>
             </intent-filter>

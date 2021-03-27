@@ -1,8 +1,6 @@
 package com.example.euterpe.model
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
@@ -16,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.createMemberInPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.deleteMemberInPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
+import com.example.euterpe.controller.AudioController
 
 
 class TrackListViewModel : ViewModel() {
@@ -76,23 +75,23 @@ class TrackListViewModel : ViewModel() {
         _viewTrackList.value = tracks
     }
 
-    private fun setPlayingTrackList(tracks: TrackList){
+    fun setPlayingTrackList(tracks: TrackList){
         _playingTrackList.value = tracks
     }
 
-    private fun setIsRandom(isRandom: Boolean){
+    fun setIsRandom(isRandom: Boolean){
         _isRandom.value = isRandom
     }
 
-    private fun setActiveTracks(tracks: MutableList<Track>){
+    fun setActiveTracks(tracks: MutableList<Track>){
         _playingTrackList.value!!.trackList = tracks
     }
 
-    private fun setCurrentTrack(track: Track){
+    fun setCurrentTrack(track: Track){
         _currentTrack.value = track
     }
 
-    private fun setCurrentIndex(index: Int){
+    fun setCurrentIndex(index: Int){
         _currentIndex.value = index
     }
 
@@ -100,11 +99,11 @@ class TrackListViewModel : ViewModel() {
         _mediaPlayer.value = mediaP
     }
 
-    private fun setIsPaused(isPaused: Boolean){
+    fun setIsPaused(isPaused: Boolean){
         _isPaused.value = isPaused
     }
 
-    private fun getTrackFromIndex(index: Int): Track{
+    fun getTrackFromIndex(index: Int): Track{
         return _playingTrackList.value!!.trackList[index]
     }
 
@@ -211,7 +210,7 @@ class TrackListViewModel : ViewModel() {
         setPlayingTrackList(playingTrackList.value!!)
     }
 
-    private fun changeTrack(context: Context, newCurrentTrack: Track, newIndex: Int){
+    fun changeTrack(context: Context, newCurrentTrack: Track, newIndex: Int){
         setCurrentTrack(newCurrentTrack)
         setCurrentIndex(newIndex)
         stopTrack()
@@ -293,56 +292,6 @@ class TrackListViewModel : ViewModel() {
         setIsPaused(false)
     }
 
-    fun playbackTrack(context: Context){
-        if(_mediaPlayer.value!!.isPlaying){
-            _mediaPlayer.value!!.pause()
-            setIsPaused(true)
-        } else {
-            mediaPlayer.value!!.seekTo(_mediaPlayer.value!!.currentPosition)
-            _mediaPlayer.value!!.start()
-            setIsPaused(false)
-        }
-    }
-
-    fun playPreviousTrack(context: Context){
-        val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
-
-        if(_currentIndex.value!! != 0){
-            val currentPosition = _mediaPlayer.value!!.currentPosition
-
-            if(currentPosition > 10000){
-                mediaPlayer.value!!.seekTo(0)
-            } else {
-                val track = getTrackFromIndex(_currentIndex.value!! - 1 )
-                changeTrack(context, track, _currentIndex.value!! - 1)
-
-                if(isCurrentlyPlaying){
-                    _mediaPlayer.value!!.start()
-                }
-            }
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun playNextTrack(context: Context){
-        Log.i("TrackList", _currentIndex.value!!.toString())
-        Log.i("TrackList", _playingTrackList.value!!.trackList.size.toString())
-
-        val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
-
-        if(_currentIndex.value!! + 1 < _playingTrackList.value!!.trackList.size){
-            val track = getTrackFromIndex(_currentIndex.value!! + 1)
-            changeTrack(context, track, _currentIndex.value!! + 1)
-
-            if(isCurrentlyPlaying){
-                _mediaPlayer.value!!.start()
-            }
-        } else {
-            playbackTrack(context)
-            mediaPlayer.value!!.seekTo(_currentTrack.value!!.duration)
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun autoplayNextTrack(context: Context){
         if(_currentIndex.value!! + 1 < _playingTrackList.value!!.trackList.size) {
@@ -351,7 +300,7 @@ class TrackListViewModel : ViewModel() {
             _mediaPlayer.value!!.start()
         } else {
             val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
-            playbackTrack(context)
+            AudioController.playbackTrack(context, this)
             mediaPlayer.value!!.seekTo(_currentTrack.value!!.duration)
         }
     }

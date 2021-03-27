@@ -21,25 +21,31 @@ class MediaReceiver: BroadcastReceiver(){
     private var  viewModel: TrackListViewModel? = null
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.i("Broadcast Receiver", "In Media Receiver")
-
-        if(ACTION_PAUSE == intent!!.action){
-            Log.i("Broadcast Receiver", "Pause Button")
-            val pauseIntent = Intent(context, MediaReceiver::class.java)
-            pauseIntent.action = MediaService.ACTION_PAUSE
-            LocalBroadcastManager.getInstance(context!!).sendBroadcast(pauseIntent)
-        } else if(ACTION_NEXT == intent!!.action){
-            Log.i("Broadcast Receiver", "Next Button")
-            val nextIntent = Intent(context, MediaReceiver::class.java)
-            nextIntent.action = MediaService.ACTION_NEXT
-            LocalBroadcastManager.getInstance(context!!).sendBroadcast(nextIntent)
-        } else if(ACTION_PREVIOUS == intent!!.action){
-            Log.i("Broadcast Receiver", "Previous Button")
-            val previousIntent = Intent(context, MediaReceiver::class.java)
-            previousIntent.action = MediaService.ACTION_PREVIOUS
-            LocalBroadcastManager.getInstance(context!!).sendBroadcast(previousIntent)
-        } else {
-            Log.i("Broadcast Receiver", "Couldn't categorise intent")
+        Log.i("Media Receiver", intent!!.action.toString())
+        when {
+            ACTION_PAUSE == intent!!.action -> {
+                val pauseIntent = Intent(context, MediaReceiver::class.java)
+                pauseIntent.action = MediaService.ACTION_PAUSE
+                LocalBroadcastManager.getInstance(context!!).sendBroadcast(pauseIntent)
+            }
+            ACTION_NEXT == intent!!.action -> {
+                val nextIntent = Intent(context, MediaReceiver::class.java)
+                nextIntent.action = MediaService.ACTION_NEXT
+                LocalBroadcastManager.getInstance(context!!).sendBroadcast(nextIntent)
+            }
+            ACTION_PREVIOUS == intent!!.action -> {
+                val previousIntent = Intent(context, MediaReceiver::class.java)
+                previousIntent.action = MediaService.ACTION_PREVIOUS
+                LocalBroadcastManager.getInstance(context!!).sendBroadcast(previousIntent)
+            }
+            ACTION_PLAY == intent!!.action -> {
+                val playIntent = Intent(context, MediaReceiver::class.java)
+                playIntent.action = MediaService.ACTION_PLAY
+                LocalBroadcastManager.getInstance(context!!).sendBroadcast(playIntent)
+            }
+            else -> {
+                Log.i("Broadcast Receiver", "Couldn't categorise intent")
+            }
         }
 
     }
