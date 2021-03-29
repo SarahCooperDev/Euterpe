@@ -141,7 +141,7 @@ class SelectionFragment : Fragment() {
             var menuSize = this.menu.size()
 
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
-                viewModel.reorderTracklist(item!!.title.toString())
+                AudioController.reorderTracklist(item!!.title.toString(), viewModel)
 
                 Log.i("Selection Fragment", item.isChecked.toString())
                 item.setChecked(true)
@@ -189,7 +189,7 @@ class SelectionFragment : Fragment() {
     }
 
     private fun randomise(item: MenuItem){
-        viewModel.switchRandom()
+        AudioController.toggleRandom(viewModel)
         var title = item.getTitle().toString()
         var color = "#ab000d"
 

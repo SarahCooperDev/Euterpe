@@ -10,14 +10,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import com.example.euterpe.adapter.TrackListAdapter
 import com.example.euterpe.adapter.TrackListListener
+import com.example.euterpe.controller.AudioController
 import com.example.euterpe.databinding.FragmentFavouritesBinding
 import com.example.euterpe.model.TrackListViewModel
 
-/**
- * A simple [Fragment] subclass.
- * Use the [FavouritesFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class FavouritesFragment : Fragment() {
 
     private val viewModel: TrackListViewModel by activityViewModels()
@@ -37,8 +33,8 @@ class FavouritesFragment : Fragment() {
 
         val adapter = TrackListAdapter(TrackListListener { uri ->
                 viewModel.setCurrentPlaylist("Favourites")
-                viewModel.setPlayingTracklistToFav()
-                viewModel.playPlaylistOnClick(requireContext(), uri)
+                AudioController.setPlayingTracklistToFav(viewModel)
+                AudioController.playOnClick(requireContext(), viewModel, uri, true)
             })
 
         binding.favouriteRcv.adapter = adapter
@@ -70,8 +66,6 @@ class FavouritesFragment : Fragment() {
 
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            FavouritesFragment().apply {
-
-            }
+            FavouritesFragment().apply {}
     }
 }

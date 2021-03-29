@@ -3,7 +3,6 @@ package com.example.euterpe
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,11 +16,6 @@ import com.example.euterpe.controller.AudioController
 import com.example.euterpe.databinding.FragmentPlaybackBinding
 import com.example.euterpe.model.TrackListViewModel
 
-/**
- * A simple [Fragment] subclass.
- * Use the [PlaybackFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PlaybackFragment : Fragment() {
 
     private val viewModel: TrackListViewModel by activityViewModels()
@@ -35,7 +29,7 @@ class PlaybackFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_playback, container, false);
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_playback, container, false)
         val view: View = binding.root
 
         binding?.apply{
@@ -49,14 +43,7 @@ class PlaybackFragment : Fragment() {
         }
 
         binding.isFavouritedBtn.setOnClickListener {
-            Log.i("Playback Fragment", "Clicked Favourite button")
-            viewModel.toggleFavouriteTrack(requireContext())
-
-            //if(viewModel.currentTrack.value!!.isFavourited){
-            //    binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
-            //} else {
-            //    binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
-            //}
+            AudioController.toggleFavouriteTrack(requireContext(), viewModel)
         }
 
         viewModel.currentTrack.observe(viewLifecycleOwner, Observer {
@@ -95,7 +82,7 @@ class PlaybackFragment : Fragment() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                viewModel.adjustCurrentPosition(seekBar!!)
+                AudioController.adjustCurrentPosition(seekBar!!, viewModel)
             }
         })
 

@@ -3,17 +3,11 @@ package com.example.euterpe.model
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Build
-import android.util.Log
-import android.widget.SeekBar
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.euterpe.adapter.MediastoreAdapter.Companion.createMemberInPlaylist
-import com.example.euterpe.adapter.MediastoreAdapter.Companion.deleteMemberInPlaylist
-import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
 import com.example.euterpe.controller.AudioController
 
 
@@ -107,214 +101,16 @@ class TrackListViewModel : ViewModel() {
         return _playingTrackList.value!!.trackList[index]
     }
 
-    private fun stopTrack(){
-        _mediaPlayer.value!!.stop()
-        _mediaPlayer.value!!.reset()
-    }
-
-    private fun prepareTrack(context: Context, uri: Uri){
-        _mediaPlayer.value!!.setDataSource(context, uri)
-        _mediaPlayer.value!!.prepare()
-    }
-
-    private fun resetPlayingTracklist(){
-        val duplicateList = TrackList()
-        duplicateList.trackList = _trackList.value!!.trackList.toMutableList()
-        setPlayingTrackList(duplicateList)
-    }
-
-    private fun shufflePlayingTracklist(){
-        _playingTrackList.value!!.trackList.shuffle()
-        setCurrentIndex(0)
-    }
-
-    private fun orderTracklist(){
-        val currentTrack = _currentTrack.value!!
-        resetPlayingTracklist()
-
-        var index = _playingTrackList.value!!.trackList.indexOf(currentTrack)
-        setCurrentTrack(currentTrack)
-        setCurrentIndex(index)
-    }
-
-    fun reorderTracklist(order: String){
-        Log.i("Reordering", "Reordering tracklist")
-        Log.i("Reordering", order.toString())
-        Log.i("Reordering", _currentOrder.value!!.toString())
-        when (order) {
-            "Alphabetical" -> {
-                if(_currentOrder.value!! == "Alphabetical") {
-                    setCurrentOrder("Reverse Alphabetical")
-                     _viewTrackList.value!!.trackList.sortByDescending { it.title }
-                    setViewTrackList(_viewTrackList.value!!)
-                } else {
-                    setCurrentOrder("Alphabetical")
-                    _viewTrackList.value!!.trackList.sortBy { it.title }
-                    setViewTrackList(_viewTrackList.value!!)
-                }
-            }
-            "Artist" -> {
-                if(_currentOrder.value!! == "Artist") {
-                    setCurrentOrder("Reverse Artist")
-                    _viewTrackList.value!!.trackList.sortByDescending { it.artist }
-                    setViewTrackList(_viewTrackList.value!!)
-                } else {
-                    setCurrentOrder("Artist")
-                    _viewTrackList.value!!.trackList.sortBy { it.artist }
-                    setViewTrackList(_viewTrackList.value!!)
-                }
-            }
-            "Album" -> {
-                if(_currentOrder.value!! == "Album") {
-                    setCurrentOrder("Reverse Album")
-                    _viewTrackList.value!!.trackList.sortByDescending { it.album }
-                    setViewTrackList(_viewTrackList.value!!)
-                } else {
-                    setCurrentOrder("Album")
-                    _viewTrackList.value!!.trackList.sortBy { it.album }
-                    setViewTrackList(_viewTrackList.value!!)
-                }
-            }
-            "Recently" -> {
-                if(_currentOrder.value!! == "Recently") {
-                    setCurrentOrder("Reverse Recently")
-                    _viewTrackList.value!!.trackList.sortBy { it.dateAdded }
-                    setViewTrackList(_viewTrackList.value!!)
-                } else {
-                    setCurrentOrder("Recently")
-                    _viewTrackList.value!!.trackList.sortByDescending { it.dateAdded }
-                    setViewTrackList(_viewTrackList.value!!)
-                }
-            }
-        }
-
-        if(!_isRandom.value!!){
-            Log.i("TrackList ViewModel", "Is not random")
-            val currentTrack = _currentTrack.value!!
-            setPlayingTrackList(_viewTrackList.value!!)
-
-            var index = _playingTrackList.value!!.trackList.indexOf(currentTrack)
-            setCurrentTrack(currentTrack)
-            setCurrentIndex(index)
-        }
-
-    }
-
-    fun setPlayingTracklistToFav(){
-        resetPlayingTracklist()
-
-        var favouritePlaylist = playlists.value!!.find{it.name == "Favourites"}
-        var newPlayingList = trackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
-        playingTrackList.value!!.trackList = newPlayingList.toMutableList()
-
-        setPlayingTrackList(playingTrackList.value!!)
-    }
-
-    fun changeTrack(context: Context, newCurrentTrack: Track, newIndex: Int){
-        setCurrentTrack(newCurrentTrack)
-        setCurrentIndex(newIndex)
-        stopTrack()
-        prepareTrack(context, newCurrentTrack.uri)
-    }
-
-    fun switchRandom(){
-        if(_isRandom.value!!){
-            setIsRandom(false)
-            orderTracklist()
-        } else {
-            setIsRandom(true)
-            resetPlayingTracklist()
-            shufflePlayingTracklist()
-        }
-    }
-
-    fun adjustCurrentPosition(seekBar: SeekBar){
-        mediaPlayer.value!!.seekTo(seekBar.progress)
-    }
-
-    fun toggleFavouriteTrack(context: Context){
-        currentTrack.value!!.isFavourited = !currentTrack.value!!.isFavourited
-        var playlist = playlists.value!!.find{it.name == "Favourites"}
-
-        if(currentTrack.value!!.isFavourited) {
-            createMemberInPlaylist(context, playlist!!.id, currentTrack.value!!)
-            readPlaylistMembers(context, this, playlist!!.id)
-        } else {
-            deleteMemberInPlaylist(context, playlist!!.id, currentTrack.value!!)
-            readPlaylistMembers(context, this, playlist!!.id)
-        }
-
-        var allPlaylists = playlists.value
-        setPlaylists(allPlaylists!!)
-
-        var changingTrack = currentTrack.value
-        setCurrentTrack(changingTrack!!)
-
-        Log.i("Favourited", currentTrack.value!!.isFavourited.toString())
-    }
-
-    fun playPlaylistOnClick(context: Context, uri: Uri){
-        val clickedTrack = _trackList.value!!.trackList.find{ it.uri == uri}
-        if(_isRandom.value!!){
-            _playingTrackList.value!!.trackList.shuffle()
-            setCurrentIndex(0)
-
-            _playingTrackList.value!!.trackList.remove(clickedTrack)
-            _playingTrackList.value!!.trackList.add(0, clickedTrack!!)
-
-            changeTrack(context, clickedTrack, 0)
-        } else {
-            var index = _playingTrackList.value!!.trackList.indexOf(clickedTrack)
-            changeTrack(context, clickedTrack!!, index)
-        }
-
-        _mediaPlayer.value!!.start()
-        setIsPaused(false)
-    }
-
-    fun playOnClick(context: Context, uri: Uri){
-        val clickedTrack = _trackList.value!!.trackList.find{ it.uri == uri}
-        resetPlayingTracklist()
-
-        if(_isRandom.value!!){
-            shufflePlayingTracklist()
-
-            _playingTrackList.value!!.trackList.remove(clickedTrack)
-            _playingTrackList.value!!.trackList.add(0, clickedTrack!!)
-
-            changeTrack(context, clickedTrack, 0)
-        } else {
-            var index = _playingTrackList.value!!.trackList.indexOf(clickedTrack)
-            changeTrack(context, clickedTrack!!, index)
-        }
-
-        _mediaPlayer.value!!.start()
-        setIsPaused(false)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun autoplayNextTrack(context: Context){
-        if(_currentIndex.value!! + 1 < _playingTrackList.value!!.trackList.size) {
-            val track = getTrackFromIndex(_currentIndex.value!! + 1)
-            changeTrack(context, track, _currentIndex.value!! + 1)
-            _mediaPlayer.value!!.start()
-        } else {
-            val isCurrentlyPlaying = _mediaPlayer.value!!.isPlaying
-            AudioController.playbackTrack(context, this)
-            mediaPlayer.value!!.seekTo(_currentTrack.value!!.duration)
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun init(context: Context){
         setViewTrackList(trackList.value!!)
-        resetPlayingTracklist()
+        AudioController.resetPlayingTracklist(this)
         setPlaylists(arrayListOf<Playlist>())
 
         _isRandom.value = true
         _currentPlaylist.value = "Tracks"
         _currentOrder.value = "Alphabetical"
-        shufflePlayingTracklist()
+        AudioController.shufflePlayingTracklist(this)
         setIsPaused(true)
 
         _mediaPlayer.value = MediaPlayer().apply {
@@ -327,15 +123,10 @@ class TrackListViewModel : ViewModel() {
         }
 
         _mediaPlayer.value!!.setOnCompletionListener {
-            Log.i("TrackListViewModel", "Autoplaying next song")
-            Log.i("TrackListViewModel", _mediaPlayer.value!!.isPlaying.toString())
-            autoplayNextTrack(context)
+            AudioController.autoplayNextTrack(context, this)
         }
 
-        setCurrentIndex(0)
-        val track = getTrackFromIndex(_currentIndex.value!!)
-        setCurrentTrack(track)
-
-        prepareTrack(context, track.uri)
+        val track = getTrackFromIndex(0)
+        AudioController.changeTrack(context, this, track, 0)
     }
 }

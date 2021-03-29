@@ -11,6 +11,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import com.example.euterpe.adapter.TrackListAdapter
 import com.example.euterpe.adapter.TrackListListener
+import com.example.euterpe.controller.AudioController
 import com.example.euterpe.databinding.FragmentTrackListBinding
 import com.example.euterpe.model.TrackListViewModel
 
@@ -34,7 +35,7 @@ class TrackListFragment : Fragment() {
         val adapter =
             TrackListAdapter(TrackListListener { uri ->
                 viewModel.setCurrentPlaylist("Tracks")
-                viewModel.playOnClick(requireContext(), uri)
+                AudioController.playOnClick(requireContext(), viewModel, uri, false)
             })
 
         binding.trackListRcv.adapter = adapter
