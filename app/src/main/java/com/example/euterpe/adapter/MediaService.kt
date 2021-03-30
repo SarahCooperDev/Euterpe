@@ -26,6 +26,7 @@ class MediaService{
         val ACTION_NEXT = "action_next"
         val ACTION_PREVIOUS = "action_previous"
         val ACTION_STOP = "action_stop"
+        val ACTION_PLAYBACK = "action_playback"
 
         private val mMediaPlayer: MediaPlayer? = null
         private val mManager: MediaSessionManager? = null

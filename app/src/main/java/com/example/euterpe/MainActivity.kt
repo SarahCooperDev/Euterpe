@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -11,6 +13,8 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.euterpe.controller.MediaButtonIntentReceiver
+
 
 class MainActivity : AppCompatActivity() {
     private val notificationChannel: String = "EuterpeChannel"
@@ -27,6 +31,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.app_toolbar))
+
+        val filter = IntentFilter(Intent.ACTION_MEDIA_BUTTON)
+        val r = MediaButtonIntentReceiver()
+        filter.priority = 10000
+        registerReceiver(r, filter)
 
         val channel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             var channel = NotificationChannel(notificationChannel,"Euterpe", importance)

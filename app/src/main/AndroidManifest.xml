@@ -2,15 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.euterpe">
+
     <uses-sdk android:targetSdkVersion="17" />
 
-    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL"
+    <uses-permission
+        android:name="android.permission.MEDIA_CONTENT_CONTROL"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
@@ -22,13 +24,28 @@
         android:supportsRtl="true"
         android:theme="@style/EuterpeTheme">
 
-        <receiver android:name=".adapter.MediaReceiver"  android:exported="true">
+        <receiver
+            android:name=".adapter.MediaReceiver"
+            android:exported="true">
             <intent-filter>
-                <action android:name="PAUSE_ACTION"/>
-                <action android:name="PREVIOUS_ACTION"/>
-                <action android:name="NEXT_ACTION"/>
+                <action android:name="PAUSE_ACTION" />
+                <action android:name="PREVIOUS_ACTION" />
+                <action android:name="NEXT_ACTION" />
+                <action android:name="PLAY_ACTION" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".controller.MediaButtonIntentReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name="com.example.euterpe.AudioService" >
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </service>
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -37,10 +54,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="PAUSE_ACTION"/>
-                <action android:name="PLAY_ACTION"/>
-                <action android:name="PREVIOUS_ACTION"/>
-                <action android:name="NEXT_ACTION"/>
+                <action android:name="PAUSE_ACTION" />
+                <action android:name="PLAY_ACTION" />
+                <action android:name="PREVIOUS_ACTION" />
+                <action android:name="NEXT_ACTION" />
             </intent-filter>
         </activity>
     </application>
