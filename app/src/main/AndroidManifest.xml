@@ -24,6 +24,15 @@
         android:supportsRtl="true"
         android:theme="@style/EuterpeTheme">
 
+        <service android:name="com.example.euterpe.AudioService" android:enabled="true"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+                <action android:name="android.media.browser.MediaBrowserService"></action>
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".adapter.MediaReceiver"
             android:exported="true">
@@ -34,18 +43,6 @@
                 <action android:name="PLAY_ACTION" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".controller.MediaButtonIntentReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </receiver>
-
-        <service android:name="com.example.euterpe.AudioService" >
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </service>
 
         <activity android:name=".MainActivity">
             <intent-filter>

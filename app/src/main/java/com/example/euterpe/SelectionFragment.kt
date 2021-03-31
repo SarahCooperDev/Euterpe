@@ -1,14 +1,13 @@
 package com.example.euterpe
 
 import android.app.NotificationManager
-import android.app.PendingIntent
-import android.bluetooth.BluetoothAdapter
 import android.content.*
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -33,7 +32,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
-import com.example.euterpe.adapter.MediaReceiver
 import com.example.euterpe.adapter.MediaService
 import com.example.euterpe.adapter.MediaService.Companion.cancelNotifications
 import com.example.euterpe.adapter.MediaService.Companion.sendNotification
@@ -70,46 +68,39 @@ class SelectionFragment : Fragment() {
     val ACTION_NEXT = "action_next"
     val ACTION_PREVIOUS = "action_previous"
     val ACTION_STOP = "action_stop"
-    private val NOTIFICATION_ID = 0
+    private val TAG = "Selection Fragment"
 
     private lateinit var selectionAdapter: SelectionAdapter
     private lateinit var viewPager: ViewPager2
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentSelectionBinding
     private var menuItemChecked: Int = 0
-    lateinit var bluetoothAdapter: BluetoothAdapter
-    private lateinit var mediaSession: MediaSessionCompat
-    private val notificationChannel: String = "EuterpeChannel"
     private var notificationManager: NotificationManager? = null
     private var builder: NotificationCompat.Builder? = null
-    var mediaController: android.widget.MediaController? = null
     private lateinit var mediaBrowser: MediaBrowserCompat
+    private var sessionToken: MediaSessionCompat.Token? = null
 
     private val audioReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.i("Broadcast Receiver", "In Local Media Receiver with " + intent!!.action)
 
             when {
-                ACTION_PAUSE == intent!!.action -> {
+                ACTION_PAUSE == intent!!.action || ACTION_PLAY == intent!!.action -> {
                     AudioController.playbackTrack(requireContext(), viewModel)
-                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
                 }
                 ACTION_PREVIOUS == intent!!.action -> {
                     AudioController.playPreviousTrack(requireContext(), viewModel)
-                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
                 }
                 ACTION_NEXT == intent!!.action -> {
                     AudioController.playNextTrack(requireContext(), viewModel)
-                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
-                }
-                ACTION_PLAY == intent!!.action -> {
-                    AudioController.playbackTrack(requireContext(), viewModel)
-                    notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this, builder,viewModel.isPaused.value!!)
                 }
                 else -> {
                     Log.i("Broadcast Receiver", "Couldn't categorise intent")
                 }
             }
+
+            var messageBody = viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album
+            notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,messageBody, requireContext(),  builder, viewModel.isPaused.value!!)
         }
 
     }
@@ -121,10 +112,23 @@ class SelectionFragment : Fragment() {
                 val mediaController = MediaControllerCompat(
                     requireContext(), token
                 )
+                Log.i(TAG, "Setting token")
+                sessionToken = token
+                builder = MediaService.generateBaseBuilder(requireContext(), sessionToken!!)
+                notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), builder!!, viewModel.isPaused.value!!)
 
                 MediaControllerCompat.setMediaController(requireActivity(), mediaController)
             }
+        }
 
+        override fun onConnectionFailed() {
+            super.onConnectionFailed()
+            Log.i(TAG, "Connection failed")
+        }
+
+        override fun onConnectionSuspended() {
+            super.onConnectionSuspended()
+            Log.i(TAG, "Connection suspended")
         }
     }
 
@@ -132,17 +136,19 @@ class SelectionFragment : Fragment() {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         menuItemChecked = 0
-        setupMediaSession()
+
         var lbm = LocalBroadcastManager.getInstance(requireContext())
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PAUSE))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PLAY))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PREVIOUS))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_NEXT))
 
+
         mediaBrowser = MediaBrowserCompat(requireContext(),
             ComponentName(requireContext(), AudioService::class.java),
             connectionCallbacks,
             null)
+
     }
 
     private var controllerCallback = object : MediaControllerCompat.Callback() {
@@ -154,10 +160,15 @@ class SelectionFragment : Fragment() {
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             Log.i("Controller callback", "On playback state changed")
         }
+
+        fun onCommand(command: String, extras: Bundle?, cb: ResultReceiver?){
+            Log.i(TAG, "In the on command method")
+        }
     }
 
     override fun onStart() {
         super.onStart()
+        Log.i(TAG, "Started")
         mediaBrowser.connect()
     }
 
@@ -191,7 +202,7 @@ class SelectionFragment : Fragment() {
             setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item: MenuItem? ->
                 AudioController.reorderTracklist(item!!.title.toString(), viewModel)
 
-                Log.i("Selection Fragment", item.isChecked.toString())
+                Log.i(TAG, item.isChecked.toString())
                 item.setChecked(true)
 
                 when(item!!.itemId){
@@ -253,67 +264,12 @@ class SelectionFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        var id = item.itemId
-
-        when(id) {
+        when(item.itemId) {
             R.id.randomise_btn -> randomise(item)
             R.id.search_btn -> Toast.makeText(requireContext(), "Searching...", Toast.LENGTH_SHORT)
         }
 
         return true
-    }
-
-    private fun setupMediaSession(){
-        var mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
-        mediaButtonIntent.action = Intent.ACTION_MEDIA_BUTTON
-        val mediaButtonReceiverPendingIntent: PendingIntent =
-            PendingIntent.getBroadcast(requireContext(), 0, mediaButtonIntent, 0)
-
-        mediaSession = MediaSessionCompat(requireContext(), "BluetoothService").apply {
-            setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mediaController = android.widget.MediaController(requireContext())
-            mediaController!!.setAnchorView(view)
-        }
-
-
-        val callback = object: MediaSessionCompat.Callback(){
-            override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-                Log.i("Selection Fragment", "Cause mediabutton event")
-                Log.i("Selection Fragment", mediaButtonEvent.toString())
-                Log.i("Selection Fragment", mediaButtonEvent!!.action.toString())
-                var keyEvent  = mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
-
-                if (keyEvent != null) {
-                    if (keyEvent.action == KeyEvent.ACTION_UP)
-                    {
-                        Log.i("Selection Fragment", "Keyevent Action up")
-                        val intent = Intent(requireContext(), MediaReceiver::class.java)
-                        intent.action = MediaService.ACTION_PLAY
-                        var pending =  PendingIntent.getBroadcast(requireContext(), 0, intent, 0)
-                        pending.send()
-                    }
-                }
-
-                return super.onMediaButtonEvent(mediaButtonEvent)
-            }
-
-            override fun onPlay() {
-                super.onPlay()
-                Log.i("Audio Service", "Cause onplay event")
-            }
-
-            override fun onPause() {
-                super.onPause()
-                Log.i("Audio Service", "Cause mediabutton event")
-            }
-        }
-
-        mediaSession.setCallback(callback)
-        mediaSession.isActive = true
-        mediaSession.setMediaButtonReceiver(mediaButtonReceiverPendingIntent)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -342,8 +298,7 @@ class SelectionFragment : Fragment() {
         var trackList = TrackList()
 
         for (track in audioList) {
-            var newTrack = Track(track.id, track.uri, track.title, track.artist, track.album, track.dateAdded, track.duration)
-            trackList.addTrack(newTrack)
+            trackList.addTrack(Track(track.id, track.uri, track.title, track.artist, track.album, track.dateAdded, track.duration))
         }
 
         viewModel.setTrackList(trackList)
@@ -353,7 +308,7 @@ class SelectionFragment : Fragment() {
 
         // Check to make sure the Favourites playlist exists, and creates it if it doesn't
         if(playlistList.size == 0 && playlistList.any{it.playlistTitle == "Favourites"}){
-            Log.i("Selection Fragment", "There are currently no playlists")
+            Log.i(TAG, "There are currently no playlists")
             var id = createPlaylist(requireActivity(), "Favourites")
 
             playlistList = readPlaylists(requireContext())
@@ -367,21 +322,25 @@ class SelectionFragment : Fragment() {
             readPlaylistMembers(requireContext(), viewModel, list.playlistId)
         }
 
-
-
-        builder = MediaService.generateBaseBuilder(requireContext(), mediaSession)
-
         notificationManager = ContextCompat.getSystemService(requireContext(), NotificationManager::class.java) as NotificationManager
         notificationManager!!.cancelNotifications()
-        notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, this.audioReceiver, builder, viewModel.isPaused.value!!)
-
 
         viewModel.isPaused.observe(viewLifecycleOwner, Observer {
-            notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, audioReceiver, builder,viewModel.isPaused.value!!)
+            if(builder == null){
+                Log.i(TAG, "Is paused without builder object")
+            } else {
+                Log.i(TAG, "Is paused being observed with builder object")
+                notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), builder!!,viewModel.isPaused.value!!)
+            }
         })
 
         viewModel.currentTrack.observe(viewLifecycleOwner, Observer {
-            notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), mediaSession, audioReceiver, builder,viewModel.isPaused.value!!)
+            if(builder == null){
+                Log.i(TAG, "Current track without builder object")
+            } else {
+                Log.i(TAG, "Current track without builder object")
+                notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), builder!!, viewModel.isPaused.value!!)
+            }
         })
     }
 

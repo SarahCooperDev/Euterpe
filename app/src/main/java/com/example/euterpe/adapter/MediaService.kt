@@ -3,7 +3,6 @@ package com.example.euterpe.adapter
 import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -39,7 +38,7 @@ class MediaService{
 
 
         @SuppressLint("RestrictedApi")
-        fun NotificationManager.sendNotification(messageTitle: String, messageBody: String, context: Context, mediaSession: MediaSessionCompat, audioReceiver: BroadcastReceiver, builder: NotificationCompat.Builder?, isPaused: Boolean){
+        fun NotificationManager.sendNotification(messageTitle: String, messageBody: String, context: Context, builder: NotificationCompat.Builder?, isPaused: Boolean){
             Log.i("Media Service", "Send notification")
             val contentIntent = Intent(context, MainActivity::class.java)
             val contentPendingIntent = PendingIntent.getActivity(context, NOTIFICATION_ID, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT)
@@ -69,7 +68,7 @@ class MediaService{
             return PendingIntent.getBroadcast(context, 0, intent, 0)
         }
 
-        fun generateBaseBuilder(context: Context, mediaSession: MediaSessionCompat): NotificationCompat.Builder{
+        fun generateBaseBuilder(context: Context, token: MediaSessionCompat.Token): NotificationCompat.Builder{
             val eggImage = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
             val bigPicStyle = NotificationCompat.BigPictureStyle().bigPicture(eggImage).bigLargeIcon(null)
 
@@ -83,7 +82,7 @@ class MediaService{
                 .setStyle(
                     androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0,1,2)
-                        .setMediaSession(mediaSession.sessionToken))
+                        .setMediaSession(token))
 
             return builder
         }
