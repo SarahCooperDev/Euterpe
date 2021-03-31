@@ -1,7 +1,6 @@
-package com.example.euterpe
+package com.example.euterpe.controller
 
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -11,13 +10,12 @@ import android.util.Log
 import android.view.KeyEvent
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
+import com.example.euterpe.MainActivity
 import com.example.euterpe.adapter.MediaReceiver
-import com.example.euterpe.adapter.MediaService
 
 
 class AudioService : MediaBrowserServiceCompat() {
     private val TAG = "Audio Service"
-    private lateinit var context: Context
     lateinit var mediaSession: MediaSessionCompat
     private lateinit var stateBuilder: PlaybackStateCompat.Builder
 
@@ -34,17 +32,9 @@ class AudioService : MediaBrowserServiceCompat() {
         return BrowserRoot("Euterpe", null)
     }
 
-    fun getSession(): MediaSessionCompat{
-        return mediaSession
-    }
-
-    fun testCommandCall(){
-        Log.i(TAG, "Called test command")
-    }
-
-    fun createMediaSession(){
+    private fun createMediaSession(){
         Log.i(TAG, "On creating mediasession")
-        mediaSession = MediaSessionCompat(this, "MusicService").apply{
+        mediaSession = MediaSessionCompat(this, "AudioService").apply{
             stateBuilder = PlaybackStateCompat.Builder()
                 .setActions(
                     PlaybackStateCompat.ACTION_PLAY_PAUSE
@@ -64,16 +54,15 @@ class AudioService : MediaBrowserServiceCompat() {
         mediaSession.setMediaButtonReceiver(mediaButtonReceiverPendingIntent)
         mediaSession.setCallback(object: MediaSessionCompat.Callback(){
             override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-                Log.i(TAG, "Cause mediabutton event in session")
-                Log.i(TAG, mediaButtonEvent!!.action.toString())
                 var keyEvent  = mediaButtonEvent!!.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
 
                 if (keyEvent != null) {
                     if (keyEvent.action == KeyEvent.ACTION_UP)
                     {
-                        Log.i(TAG, "Keyevent Action up")
+                        Log.i(TAG, "Cause mediabutton event in session")
+                        Log.i(TAG, mediaButtonEvent!!.action.toString())
                         val intent = Intent(this@AudioService, MediaReceiver::class.java)
-                        intent.action = MediaService.ACTION_PLAY
+                        intent.action = NotificationService.ACTION_PLAY
                         var pending =  PendingIntent.getBroadcast(this@AudioService, 0, intent, 0)
                         pending.send()
                     }
@@ -84,22 +73,17 @@ class AudioService : MediaBrowserServiceCompat() {
 
             override fun onPlay() {
                 super.onPlay()
-                Log.i(TAG, "Cause onplay event")
             }
 
             override fun onPause() {
                 super.onPause()
-                Log.i(TAG, "Cause mediabutton event")
             }
         })
 
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
         val context = applicationContext
         val intent = Intent(context, MainActivity::class.java)
-        val pi = PendingIntent.getActivity(
-            context, 99 /*request code*/,
-            intent, PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val pi = PendingIntent.getActivity(context, 99, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         mediaSession.setSessionActivity(pi)
     }
 
@@ -109,4 +93,8 @@ class AudioService : MediaBrowserServiceCompat() {
         sessionToken = mediaSession.sessionToken
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaSession.release()
+    }
 }

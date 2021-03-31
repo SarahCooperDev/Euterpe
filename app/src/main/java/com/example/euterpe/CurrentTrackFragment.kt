@@ -16,6 +16,7 @@ import com.example.euterpe.model.TrackListViewModel
 
 class CurrentTrackFragment : Fragment() {
 
+    private val TAG = "Current Track Fragment"
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentCurrentTrackBinding
 

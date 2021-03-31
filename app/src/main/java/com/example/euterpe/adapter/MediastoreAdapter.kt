@@ -7,15 +7,25 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
-import com.example.euterpe.SelectionFragment
 import com.example.euterpe.model.Track
 import com.example.euterpe.model.TrackListViewModel
 
 class MediastoreAdapter{
+    data class Audio(val id: Long,
+                     val uri: Uri,
+                     val title: String,
+                     val artist: String,
+                     val album: String,
+                     val dateAdded: Long,
+                     val duration: Int)
+
+    data class TempPlay(val playlistId: Long,
+                        val playlistTitle: String)
 
     companion object{
+        private val TAG = "Mediastore Adapter"
 
-        fun readMusic(context: Context): List<SelectionFragment.Audio>{
+        fun readMusic(context: Context): List<Audio>{
             val projection = arrayOf(
                 MediaStore.Audio.AudioColumns._ID,
                 MediaStore.Audio.AudioColumns.TITLE,
@@ -34,7 +44,7 @@ class MediastoreAdapter{
                 sortOrder
             )
 
-            val audioList = mutableListOf<SelectionFragment.Audio>()
+            val audioList = mutableListOf<Audio>()
 
             query?.use{ cursor ->
                 val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
@@ -44,7 +54,7 @@ class MediastoreAdapter{
                 val dateCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_ADDED)
                 val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
 
-                Log.i("Query count", cursor.count.toString())
+                Log.i(TAG, "Query count" + cursor.count.toString())
 
                 if(cursor != null) {
                     if(cursor.moveToFirst()) {
@@ -57,42 +67,31 @@ class MediastoreAdapter{
                             val dateAdded = cursor.getLong(dateCol)
                             val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,id)
 
-                            audioList += SelectionFragment.Audio(
-                                id,
-                                contentUri,
-                                name,
-                                artist,
-                                album,
-                                dateAdded,
-                                duration
-                            )
+                            audioList += Audio(id, contentUri, name, artist, album, dateAdded, duration)
                         } while(cursor.moveToNext())
                     } else {
-                        Log.i("Query", "Cursor move to first fail")
+                        Log.i(TAG, "Cursor move to first fail")
                     }
-                }
-                else{
-                    Log.i("Query", "Cursor is null")
+                } else {
+                    Log.i(TAG, "Cursor is null")
                 }
             }
-            Log.i("Mediastore", audioList.toString())
+            Log.i(TAG, audioList.toString())
 
             return audioList
         }
 
 
-        fun readPlaylists(context: Context): List<SelectionFragment.TempPlay>{
+        fun readPlaylists(context: Context): List<TempPlay>{
             var playlistProjection = arrayOf(MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME)
-
             val playlistQuery = context?.contentResolver?.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, playlistProjection, null, null, null)
-
-            val playlistList = mutableListOf<SelectionFragment.TempPlay>()
+            val playlistList = mutableListOf<TempPlay>()
 
             playlistQuery?.use { cursor ->
                 val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists._ID)
                 val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.NAME)
 
-                Log.i("Playlist Query count", playlistQuery.count.toString())
+                Log.i(TAG, "Playlist Query count" + playlistQuery.count.toString())
 
                 if(cursor != null) {
                     if (cursor.moveToFirst()) {
@@ -100,12 +99,12 @@ class MediastoreAdapter{
                             val playlistId = cursor.getLong(idCol)
                             val playlistName = cursor.getString(nameCol)
 
-                            playlistList += SelectionFragment.TempPlay(playlistId, playlistName)
+                            playlistList += TempPlay(playlistId, playlistName)
                         } while (cursor.moveToNext())
                     }
                 }
             }
-            Log.i("Mediastore", playlistList.toString())
+            Log.i(TAG, playlistList.toString())
             return playlistList
         }
 
@@ -113,7 +112,6 @@ class MediastoreAdapter{
 
         fun readPlaylistMembers(context: Context, viewModel: TrackListViewModel, playlistId: Long){
             var projection = arrayOf(MediaStore.Audio.Playlists.Members.AUDIO_ID, MediaStore.Audio.Playlists.Members.PLAYLIST_ID)
-
             val query = context?.contentResolver?.query(MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId), projection, null, null, null)
 
             query?.use { cursor ->
@@ -122,7 +120,7 @@ class MediastoreAdapter{
                 var playlist = viewModel.playlists.value!!.find { it.id == playlistId }
                 playlist!!.clearMembership()
 
-                Log.i("Member Query count", query.count.toString())
+                Log.i(TAG, "Member Query count" + query.count.toString())
 
                 if(cursor != null) {
                     if (cursor.moveToFirst()) {
@@ -140,7 +138,6 @@ class MediastoreAdapter{
             }
         }
 
-
         fun createPlaylist(activity: Activity, name: String): Long{
             var cv = ContentValues()
             var resolver = activity.getContentResolver()
@@ -150,11 +147,11 @@ class MediastoreAdapter{
             var uri: Uri? = resolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, cv)
 
             if(uri == null){
-                Log.i("Selection Fragment", "Failed to insert playlist")
+                Log.i(TAG, "Failed to insert playlist")
             }
             var idString = uri!!.lastPathSegment
             if(idString == null){
-                Log.i("Selection Fragment", "Failed to parse uri last segment")
+                Log.i(TAG, "Failed to parse uri last segment")
             }
 
             return idString!!.toLong()
@@ -162,7 +159,7 @@ class MediastoreAdapter{
 
 
         fun createMemberInPlaylist(context: Context, playlistId: Long, currentTrack: Track){
-            Log.i("Add Member", "Adding member to playlist")
+            Log.i(TAG, "Adding member to playlist")
             var uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
             var columns = arrayOf<String>(
                 MediaStore.Audio.Playlists.Members.AUDIO_ID,
@@ -186,9 +183,8 @@ class MediastoreAdapter{
             }
         }
 
-
         fun deleteMemberInPlaylist(context: Context, playlistId: Long, currentTrack: Track){
-            Log.i("Remove member", "Deleting member from playlist")
+            Log.i(TAG, "Deleting member from playlist")
             var uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
             var columns = arrayOf<String>(
                 MediaStore.Audio.Playlists.Members.AUDIO_ID,

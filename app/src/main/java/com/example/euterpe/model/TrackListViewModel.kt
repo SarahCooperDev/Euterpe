@@ -77,7 +77,7 @@ class TrackListViewModel : ViewModel() {
         _isRandom.value = isRandom
     }
 
-    fun setActiveTracks(tracks: MutableList<Track>){
+    fun setPlayingTracks(tracks: MutableList<Track>){
         _playingTrackList.value!!.trackList = tracks
     }
 

@@ -9,6 +9,7 @@ import com.example.euterpe.model.TrackList
 import com.example.euterpe.model.TrackListViewModel
 
 class AudioController{
+    private val TAG = "Audio Controller"
 
     companion object{
 
@@ -64,7 +65,6 @@ class AudioController{
                 changeTrack(context, viewModel, track, viewModel.currentIndex.value!! + 1)
                 viewModel.mediaPlayer.value!!.start()
             } else {
-                val isCurrentlyPlaying = viewModel.mediaPlayer.value!!.isPlaying
                 AudioController.playbackTrack(context, viewModel)
                 viewModel.mediaPlayer.value!!.seekTo(viewModel.currentTrack.value!!.duration)
             }
@@ -129,8 +129,10 @@ class AudioController{
         fun changeTrack(context: Context, viewModel: TrackListViewModel, newCurrentTrack: Track, newIndex: Int){
             viewModel.setCurrentTrack(newCurrentTrack)
             viewModel.setCurrentIndex(newIndex)
-            stopTrack(viewModel)
-            prepareTrack(context, newCurrentTrack.uri, viewModel)
+            viewModel.mediaPlayer.value!!.stop()
+            viewModel.mediaPlayer.value!!.reset()
+            viewModel.mediaPlayer.value!!.setDataSource(context, newCurrentTrack.uri)
+            viewModel.mediaPlayer.value!!.prepare()
         }
 
         fun setPlayingTracklistToFav(viewModel: TrackListViewModel){
@@ -143,7 +145,7 @@ class AudioController{
             viewModel.setPlayingTrackList(viewModel.playingTrackList.value!!)
         }
 
-        fun orderTracklist(viewModel: TrackListViewModel){
+        private fun orderTracklist(viewModel: TrackListViewModel){
             val currentTrack = viewModel.currentTrack.value!!
             resetPlayingTracklist(viewModel)
 
@@ -211,16 +213,5 @@ class AudioController{
             duplicateList.trackList = viewModel.trackList.value!!.trackList.toMutableList()
             viewModel.setPlayingTrackList(duplicateList)
         }
-
-        private fun prepareTrack(context: Context, uri: Uri, viewModel: TrackListViewModel){
-            viewModel.mediaPlayer.value!!.setDataSource(context, uri)
-            viewModel.mediaPlayer.value!!.prepare()
-        }
-
-        private fun stopTrack(viewModel: TrackListViewModel){
-            viewModel.mediaPlayer.value!!.stop()
-            viewModel.mediaPlayer.value!!.reset()
-        }
-
     }
 }

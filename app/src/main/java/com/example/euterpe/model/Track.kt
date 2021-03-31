@@ -12,5 +12,5 @@ class Track(id: Long, uri: Uri, title: String, artist: String, album: String, da
     var dateAdded = dateAdded
     var isFavourited = false
 
-    var detailSummaryString = artist + " - " + album
+    var detailSummaryString = "$artist - $album"
 }

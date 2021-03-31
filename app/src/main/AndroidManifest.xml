@@ -24,7 +24,7 @@
         android:supportsRtl="true"
         android:theme="@style/EuterpeTheme">
 
-        <service android:name="com.example.euterpe.AudioService" android:enabled="true"
+        <service android:name="com.example.euterpe.controller.AudioService" android:enabled="true"
             android:exported="true"
             tools:ignore="ExportedService">
             <intent-filter>

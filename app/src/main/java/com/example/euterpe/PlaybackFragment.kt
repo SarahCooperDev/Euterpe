@@ -17,10 +17,10 @@ import com.example.euterpe.databinding.FragmentPlaybackBinding
 import com.example.euterpe.model.TrackListViewModel
 
 class PlaybackFragment : Fragment() {
-
+    private val TAG = "Playback Fragment"
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentPlaybackBinding
-    private lateinit var handler: Handler
+    private var handler: Handler = Handler()
     private lateinit var runnable: Runnable
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,13 +54,6 @@ class PlaybackFragment : Fragment() {
             }
         })
 
-
-        if(viewModel.currentTrack.value!!.isFavourited){
-            binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_filled_btn_dark_foreground)
-        } else {
-            binding.isFavouritedBtn.setImageResource(R.mipmap.ic_favourited_unfilled_btn_dark_foreground)
-        }
-
         viewModel.isPaused.observe(viewLifecycleOwner, Observer {
             if(viewModel.mediaPlayer.value!!.isPlaying){
                 binding.playpausePlaybackBtn.setImageResource(R.mipmap.ic_pause_btn_dark_foreground)
@@ -85,8 +78,6 @@ class PlaybackFragment : Fragment() {
                 AudioController.adjustCurrentPosition(seekBar!!, viewModel)
             }
         })
-
-        handler = Handler()
 
         runnable = Runnable {
             handler.removeCallbacksAndMessages(null)

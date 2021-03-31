@@ -16,7 +16,7 @@ import com.example.euterpe.databinding.FragmentTrackListBinding
 import com.example.euterpe.model.TrackListViewModel
 
 class TrackListFragment : Fragment() {
-
+    private val TAG = "Track List Fragment"
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentTrackListBinding
 
@@ -32,16 +32,16 @@ class TrackListFragment : Fragment() {
             trackListViewModel = viewModel
         }
 
-        val adapter =
-            TrackListAdapter(TrackListListener { uri ->
+        val adapter = TrackListAdapter(TrackListListener { uri ->
                 viewModel.setCurrentPlaylist("Tracks")
                 AudioController.playOnClick(requireContext(), viewModel, uri, false)
             })
 
         binding.trackListRcv.adapter = adapter
+
         viewModel.viewTrackList.observe(viewLifecycleOwner, Observer{
             it?.let{
-                Log.i("Track List Fragment", "Tracklist observer triggered")
+                Log.i(TAG, "Tracklist observer triggered")
                 adapter.submitList(it.trackList)
                 adapter.notifyDataSetChanged()
             }

@@ -4,7 +4,6 @@ import android.app.NotificationManager
 import android.content.*
 import android.graphics.Color
 import android.graphics.Typeface
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.ResultReceiver
@@ -32,14 +31,15 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
-import com.example.euterpe.adapter.MediaService
-import com.example.euterpe.adapter.MediaService.Companion.cancelNotifications
-import com.example.euterpe.adapter.MediaService.Companion.sendNotification
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.createPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readMusic
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylists
 import com.example.euterpe.controller.AudioController
+import com.example.euterpe.controller.AudioService
+import com.example.euterpe.controller.NotificationService
+import com.example.euterpe.controller.NotificationService.Companion.cancelNotifications
+import com.example.euterpe.controller.NotificationService.Companion.sendNotification
 import com.example.euterpe.databinding.FragmentSelectionBinding
 import com.example.euterpe.model.Playlist
 import com.example.euterpe.model.Track
@@ -50,17 +50,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import layout.SelectionAdapter
 
 class SelectionFragment : Fragment() {
-    data class Audio(val id: Long,
-                     val uri: Uri,
-                     val title: String,
-                     val artist: String,
-                     val album: String,
-                     val dateAdded: Long,
-                     val duration: Int)
-
-    data class TempPlay(val playlistId: Long,
-                        val playlistTitle: String)
-
     val ACTION_PLAY = "action_play"
     val ACTION_PAUSE = "action_pause"
     val ACTION_REWIND = "action_rewind"
@@ -82,42 +71,35 @@ class SelectionFragment : Fragment() {
 
     private val audioReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i("Broadcast Receiver", "In Local Media Receiver with " + intent!!.action)
+            Log.i(TAG, "In Local Media Receiver with " + intent!!.action)
 
             when {
                 ACTION_PAUSE == intent!!.action || ACTION_PLAY == intent!!.action -> {
                     AudioController.playbackTrack(requireContext(), viewModel)
-                }
-                ACTION_PREVIOUS == intent!!.action -> {
+                } ACTION_PREVIOUS == intent!!.action -> {
                     AudioController.playPreviousTrack(requireContext(), viewModel)
-                }
-                ACTION_NEXT == intent!!.action -> {
+                } ACTION_NEXT == intent!!.action -> {
                     AudioController.playNextTrack(requireContext(), viewModel)
-                }
-                else -> {
-                    Log.i("Broadcast Receiver", "Couldn't categorise intent")
+                } else -> {
+                    Log.i(TAG, "Couldn't categorise intent")
                 }
             }
 
             var messageBody = viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album
             notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,messageBody, requireContext(),  builder, viewModel.isPaused.value!!)
         }
-
     }
 
     private val connectionCallbacks = object: MediaBrowserCompat.ConnectionCallback(){
         override fun onConnected() {
             Log.i("Connection Callbacks", "In on connected")
             mediaBrowser.sessionToken.also{ token ->
-                val mediaController = MediaControllerCompat(
-                    requireContext(), token
-                )
-                Log.i(TAG, "Setting token")
-                sessionToken = token
-                builder = MediaService.generateBaseBuilder(requireContext(), sessionToken!!)
-                notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), builder!!, viewModel.isPaused.value!!)
-
+                val mediaController = MediaControllerCompat(requireContext(), token)
                 MediaControllerCompat.setMediaController(requireActivity(), mediaController)
+
+                sessionToken = token
+                builder = NotificationService.generateBaseBuilder(requireContext(), sessionToken!!)
+                notificationManager!!.sendNotification(viewModel.currentTrack.value!!.title,viewModel.currentTrack.value!!.artist + " - " + viewModel.currentTrack.value!!.album, requireContext(), builder!!, viewModel.isPaused.value!!)
             }
         }
 
@@ -143,16 +125,10 @@ class SelectionFragment : Fragment() {
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PREVIOUS))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_NEXT))
 
-
-        mediaBrowser = MediaBrowserCompat(requireContext(),
-            ComponentName(requireContext(), AudioService::class.java),
-            connectionCallbacks,
-            null)
-
+        mediaBrowser = MediaBrowserCompat(requireContext(), ComponentName(requireContext(), AudioService::class.java), connectionCallbacks, null)
     }
 
     private var controllerCallback = object : MediaControllerCompat.Callback() {
-
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             Log.i("Controller callback", "On metadata changed")
         }
@@ -168,12 +144,7 @@ class SelectionFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        Log.i(TAG, "Started")
         mediaBrowser.connect()
-    }
-
-    override fun onResume() {
-        super.onResume()
     }
 
     override fun onStop() {

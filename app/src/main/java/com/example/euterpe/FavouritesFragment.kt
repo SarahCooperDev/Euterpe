@@ -16,6 +16,7 @@ import com.example.euterpe.model.TrackListViewModel
 
 class FavouritesFragment : Fragment() {
 
+    private val TAG = "Favourites Fragment"
     private val viewModel: TrackListViewModel by activityViewModels()
     lateinit var binding: FragmentFavouritesBinding
 
@@ -63,9 +64,7 @@ class FavouritesFragment : Fragment() {
     }
 
     companion object {
-
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            FavouritesFragment().apply {}
+        fun newInstance() = FavouritesFragment().apply {}
     }
 }
