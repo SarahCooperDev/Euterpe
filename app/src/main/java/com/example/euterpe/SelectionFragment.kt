@@ -68,6 +68,8 @@ class SelectionFragment : Fragment() {
     private var builder: NotificationCompat.Builder? = null
     private lateinit var mediaBrowser: MediaBrowserCompat
     private var sessionToken: MediaSessionCompat.Token? = null
+    private var mediaController: MediaControllerCompat? = null
+    private var mSession: MediaSessionCompat? = null
 
     private val audioReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -94,8 +96,12 @@ class SelectionFragment : Fragment() {
         override fun onConnected() {
             Log.i("Connection Callbacks", "In on connected")
             mediaBrowser.sessionToken.also{ token ->
-                val mediaController = MediaControllerCompat(requireContext(), token)
+                mediaController = MediaControllerCompat(requireContext(), token)
                 MediaControllerCompat.setMediaController(requireActivity(), mediaController)
+                mediaController!!.registerCallback(controllerCallback)
+                mediaController!!.sendCommand("getMediaSession", null, null)
+                mSession = AudioController.getMSession()
+                Log.i(TAG, "In Selection Fragment, msession is: " + mSession.toString())
 
                 sessionToken = token
                 builder = NotificationService.generateBaseBuilder(requireContext(), sessionToken!!)
@@ -126,6 +132,18 @@ class SelectionFragment : Fragment() {
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_NEXT))
 
         mediaBrowser = MediaBrowserCompat(requireContext(), ComponentName(requireContext(), AudioService::class.java), connectionCallbacks, null)
+
+        val playlist = Playlist(1, "test", null)
+        Log.i("test", "Initial: " + playlist.id.toString())
+        testPlay(playlist)
+        Log.i("test", "Final: " + playlist.id.toString())
+
+    }
+
+    private fun testPlay(play: Playlist){
+        Log.i("test", "In testplay: " + play.id.toString())
+        play.id = 4
+        Log.i("test", "After alteration: " + play.id.toString())
     }
 
     private var controllerCallback = object : MediaControllerCompat.Callback() {

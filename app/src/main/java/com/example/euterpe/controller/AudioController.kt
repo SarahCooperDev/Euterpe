@@ -2,16 +2,32 @@ package com.example.euterpe.controller
 
 import android.content.Context
 import android.net.Uri
+import android.support.v4.media.session.MediaSessionCompat
 import android.widget.SeekBar
 import com.example.euterpe.adapter.MediastoreAdapter
 import com.example.euterpe.model.Track
 import com.example.euterpe.model.TrackList
 import com.example.euterpe.model.TrackListViewModel
 
-class AudioController{
-    private val TAG = "Audio Controller"
+class AudioController(mediaSession: MediaSessionCompat){
 
     companion object{
+        private var mSession: MediaSessionCompat? = null
+        private val TAG = "Audio Controller"
+
+        @Volatile
+        private var INSTANCE: AudioController? = null
+
+        @Synchronized
+        fun getInstance(mediaSession: MediaSessionCompat): AudioController = INSTANCE ?: AudioController(mediaSession).also { INSTANCE = it }
+
+        fun setMSession(mediaSession: MediaSessionCompat){
+            mSession = mediaSession
+        }
+
+        fun getMSession(): MediaSessionCompat?{
+            return mSession
+        }
 
         fun playbackTrack(context: Context, viewModel: TrackListViewModel){
             if(viewModel.mediaPlayer.value!!.isPlaying){
@@ -139,7 +155,7 @@ class AudioController{
             resetPlayingTracklist(viewModel)
 
             var favouritePlaylist = viewModel.playlists.value!!.find{it.name == "Favourites"}
-            var newPlayingList = viewModel.trackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
+            var newPlayingList = viewModel.trackList.value!!.trackList.filter {favouritePlaylist!!.members!!.contains(it.id)}
             viewModel.playingTrackList.value!!.trackList = newPlayingList.toMutableList()
 
             viewModel.setPlayingTrackList(viewModel.playingTrackList.value!!)

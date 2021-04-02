@@ -3,6 +3,8 @@ package com.example.euterpe.controller
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
+import android.os.IBinder
+import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -19,6 +21,14 @@ class AudioService : MediaBrowserServiceCompat() {
     lateinit var mediaSession: MediaSessionCompat
     private lateinit var stateBuilder: PlaybackStateCompat.Builder
 
+    private val myBinder: IBinder? = null
+
+    override fun onBind(intent: Intent): IBinder? {
+        return if (intent.getBooleanExtra("is_binding", false)) {
+            myBinder
+        } else super.onBind(intent)
+    }
+
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int{
         MediaButtonReceiver.handleIntent(mediaSession, intent)
         return super.onStartCommand(intent, flags, startId)
@@ -31,6 +41,11 @@ class AudioService : MediaBrowserServiceCompat() {
     override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle? ): BrowserRoot? {
         return BrowserRoot("Euterpe", null)
     }
+
+    fun getMediaSession(){
+        Log.i(TAG, "Hit get mediasession")
+    }
+
 
     private fun createMediaSession(){
         Log.i(TAG, "On creating mediasession")
@@ -69,6 +84,17 @@ class AudioService : MediaBrowserServiceCompat() {
                 }
 
                 return super.onMediaButtonEvent(mediaButtonEvent)
+            }
+
+            override fun onCommand(command: String?, extras: Bundle?, cb: ResultReceiver?) {
+                super.onCommand(command, extras, cb)
+                Log.i(TAG, "In the on-command")
+                Log.i(TAG, mediaSession.toString())
+
+                AudioController.getInstance(mediaSession)
+                AudioController.setMSession(mediaSession)
+                Log.i(TAG, "After setting audiocontroller")
+                Log.i(TAG, AudioController.getMSession().toString())
             }
 
             override fun onPlay() {

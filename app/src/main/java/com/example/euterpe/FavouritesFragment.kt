@@ -43,7 +43,7 @@ class FavouritesFragment : Fragment() {
         viewModel.playlists.observe(viewLifecycleOwner, Observer{
             it?.let{
                 var favouritePlaylist = viewModel.playlists.value!!.find{it.name == "Favourites"}
-                var favouriteList = viewModel.trackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
+                var favouriteList = viewModel.trackList.value!!.trackList.filter {favouritePlaylist!!.members!!.contains(it.id)}
 
                 adapter.submitList(favouriteList)
                 adapter.notifyDataSetChanged()
@@ -53,7 +53,7 @@ class FavouritesFragment : Fragment() {
         viewModel.viewTrackList.observe(viewLifecycleOwner, Observer {
             it?.let{
                 var favouritePlaylist = viewModel.playlists.value!!.find{it.name == "Favourites"}
-                var favouriteList = viewModel.viewTrackList.value!!.trackList.filter {favouritePlaylist!!.members.contains(it.id)}
+                var favouriteList = viewModel.viewTrackList.value!!.trackList.filter {favouritePlaylist!!.members!!.contains(it.id)}
 
                 adapter.submitList(favouriteList)
                 adapter.notifyDataSetChanged()

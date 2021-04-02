@@ -2,6 +2,7 @@ package com.example.euterpe
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +23,6 @@ class CurrentTrackFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -35,6 +35,8 @@ class CurrentTrackFragment : Fragment() {
 
         binding.playbackBtn.setOnClickListener{
             AudioController.playbackTrack(requireContext(), viewModel)
+            var mSession = AudioController.getMSession()
+            Log.i(TAG, "In Current Fragment, msession is: " + mSession.toString())
         }
 
         viewModel.isPaused.observe(viewLifecycleOwner, Observer {
