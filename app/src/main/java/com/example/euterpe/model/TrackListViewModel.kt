@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,6 +13,8 @@ import com.example.euterpe.controller.AudioController
 
 
 class TrackListViewModel : ViewModel() {
+    private var mSession: MediaSessionCompat? = null
+
     private val _trackList = MutableLiveData<TrackList>()
     val trackList: LiveData<TrackList> = _trackList
 
@@ -44,6 +47,14 @@ class TrackListViewModel : ViewModel() {
 
     private var _playlists = MutableLiveData<MutableList<Playlist>>()
     var playlists: LiveData<MutableList<Playlist>> = _playlists
+
+    fun setMSession(mediaSessionCompat: MediaSessionCompat){
+        mSession = mediaSessionCompat
+    }
+
+    fun getMSession(): MediaSessionCompat{
+        return mSession!!
+    }
 
     fun addToPlaylist(playlist: Playlist){
         _playlists.value!!.add(playlist)

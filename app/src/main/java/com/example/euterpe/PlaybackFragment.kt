@@ -38,6 +38,18 @@ class PlaybackFragment : Fragment() {
 
         binding.lifecycleOwner = viewLifecycleOwner
 
+        runnable = Runnable {
+            handler.removeCallbacksAndMessages(null)
+            binding.durationSeekbar.progress = viewModel.mediaPlayer.value!!.currentPosition
+            if(viewModel.isPaused.value!! == false){
+                handler.postDelayed(runnable, 1000)
+            } else {
+                handler.removeCallbacksAndMessages(runnable)
+            }
+        }
+
+        handler.postDelayed(runnable, 1000)
+
         binding.playpausePlaybackBtn.setOnClickListener{
             AudioController.playbackTrack(requireContext(), viewModel)
         }
@@ -57,6 +69,7 @@ class PlaybackFragment : Fragment() {
         viewModel.isPaused.observe(viewLifecycleOwner, Observer {
             if(viewModel.mediaPlayer.value!!.isPlaying){
                 binding.playpausePlaybackBtn.setImageResource(R.mipmap.ic_pause_btn_dark_foreground)
+                handler.postDelayed(runnable, 1000)
             } else {
                 binding.playpausePlaybackBtn.setImageResource(R.mipmap.ic_play_btn_dark_foreground)
             }
@@ -78,14 +91,6 @@ class PlaybackFragment : Fragment() {
                 AudioController.adjustCurrentPosition(seekBar!!, viewModel)
             }
         })
-
-        runnable = Runnable {
-            handler.removeCallbacksAndMessages(null)
-            binding.durationSeekbar.progress = viewModel.mediaPlayer.value!!.currentPosition
-            handler.postDelayed(runnable, 1000)
-        }
-
-        handler.postDelayed(runnable, 1000)
 
         return view
     }

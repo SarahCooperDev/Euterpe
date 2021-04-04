@@ -1,12 +1,13 @@
 package com.example.euterpe
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.*
 import android.graphics.Color
 import android.graphics.Typeface
+import android.media.MediaMetadata
 import android.os.Build
 import android.os.Bundle
-import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -31,6 +32,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
+import com.example.euterpe.adapter.MediaReceiver
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.createPlaylist
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readMusic
 import com.example.euterpe.adapter.MediastoreAdapter.Companion.readPlaylistMembers
@@ -69,7 +71,7 @@ class SelectionFragment : Fragment() {
     private lateinit var mediaBrowser: MediaBrowserCompat
     private var sessionToken: MediaSessionCompat.Token? = null
     private var mediaController: MediaControllerCompat? = null
-    private var mSession: MediaSessionCompat? = null
+    private lateinit var stateBuilder: PlaybackStateCompat.Builder
 
     private val audioReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -92,6 +94,91 @@ class SelectionFragment : Fragment() {
         }
     }
 
+    private fun createMediaSession(): MediaSessionCompat{
+        Log.i(TAG, "On creating mediasession")
+        var mSession = MediaSessionCompat(requireContext(), "AudioService").apply{
+            stateBuilder = PlaybackStateCompat.Builder()
+                .setActions(
+                    PlaybackStateCompat.ACTION_PLAY_PAUSE
+                            or PlaybackStateCompat.ACTION_PLAY
+                            or PlaybackStateCompat.ACTION_PAUSE
+                            or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                            or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                )
+            setPlaybackState(stateBuilder.build())
+            isActive = true
+        }
+
+        var mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
+        mediaButtonIntent.action = Intent.ACTION_MEDIA_BUTTON
+        val mediaButtonReceiverPendingIntent: PendingIntent = PendingIntent.getBroadcast(requireContext(), 0, mediaButtonIntent, 0)
+
+        mSession!!.setMediaButtonReceiver(mediaButtonReceiverPendingIntent)
+        mSession!!.setCallback(object: MediaSessionCompat.Callback(){
+            override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+                Log.i(TAG, "On Media Button Event")
+                val bundle: Bundle? = mediaButtonEvent!!.getExtras()
+                if (bundle != null) {
+                    for (key in bundle.keySet()) {
+                        Log.e(TAG, key + " : " + if (bundle[key] != null) bundle[key] else "NULL")
+                    }
+                }
+
+                var keyEvent  = mediaButtonEvent!!.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
+
+                if (keyEvent != null) {
+                    Log.i(TAG, keyEvent.keyCode.toString())
+                    if (keyEvent.action == KeyEvent.ACTION_UP)
+                    {
+                        Log.i(TAG, "Cause mediabutton event in session")
+                        val intent = Intent(requireContext(), MediaReceiver::class.java)
+
+                        when (keyEvent.keyCode) {
+                            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                                intent.action = NotificationService.ACTION_PLAY
+                            }
+                            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                                intent.action = NotificationService.ACTION_PAUSE
+                            }
+                            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                                intent.action = NotificationService.ACTION_PAUSE
+                            }
+                            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                                intent.action = NotificationService.ACTION_NEXT
+                            }
+                            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                                intent.action = NotificationService.ACTION_PREVIOUS
+                            }
+                            else -> {
+                                Log.i(TAG, "Couldn't categorise button keyCode")
+                            }
+                        }
+
+                        var pending =  PendingIntent.getBroadcast(requireContext(), 0, intent, 0)
+                        pending.send()
+                    }
+                }
+
+                return super.onMediaButtonEvent(mediaButtonEvent)
+            }
+
+            override fun onPlay() {
+                super.onPlay()
+            }
+
+            override fun onPause() {
+                super.onPause()
+            }
+        })
+
+        mSession!!.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
+        val intent = Intent(requireContext(), MainActivity::class.java)
+        val pi = PendingIntent.getActivity(requireContext(), 99, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        mSession!!.setSessionActivity(pi)
+        return mSession
+    }
+
+
     private val connectionCallbacks = object: MediaBrowserCompat.ConnectionCallback(){
         override fun onConnected() {
             Log.i("Connection Callbacks", "In on connected")
@@ -99,9 +186,6 @@ class SelectionFragment : Fragment() {
                 mediaController = MediaControllerCompat(requireContext(), token)
                 MediaControllerCompat.setMediaController(requireActivity(), mediaController)
                 mediaController!!.registerCallback(controllerCallback)
-                mediaController!!.sendCommand("getMediaSession", null, null)
-                mSession = AudioController.getMSession()
-                Log.i(TAG, "In Selection Fragment, msession is: " + mSession.toString())
 
                 sessionToken = token
                 builder = NotificationService.generateBaseBuilder(requireContext(), sessionToken!!)
@@ -125,6 +209,11 @@ class SelectionFragment : Fragment() {
         setHasOptionsMenu(true)
         menuItemChecked = 0
 
+        var mSession = createMediaSession()
+        AudioController.getInstance(mSession)
+        AudioController.setMSession(mSession)
+        viewModel.setMSession(mSession)
+
         var lbm = LocalBroadcastManager.getInstance(requireContext())
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PAUSE))
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_PLAY))
@@ -132,19 +221,8 @@ class SelectionFragment : Fragment() {
         lbm.registerReceiver(this.audioReceiver, IntentFilter(ACTION_NEXT))
 
         mediaBrowser = MediaBrowserCompat(requireContext(), ComponentName(requireContext(), AudioService::class.java), connectionCallbacks, null)
-
-        val playlist = Playlist(1, "test", null)
-        Log.i("test", "Initial: " + playlist.id.toString())
-        testPlay(playlist)
-        Log.i("test", "Final: " + playlist.id.toString())
-
     }
 
-    private fun testPlay(play: Playlist){
-        Log.i("test", "In testplay: " + play.id.toString())
-        play.id = 4
-        Log.i("test", "After alteration: " + play.id.toString())
-    }
 
     private var controllerCallback = object : MediaControllerCompat.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
@@ -153,10 +231,6 @@ class SelectionFragment : Fragment() {
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             Log.i("Controller callback", "On playback state changed")
-        }
-
-        fun onCommand(command: String, extras: Bundle?, cb: ResultReceiver?){
-            Log.i(TAG, "In the on command method")
         }
     }
 
@@ -285,7 +359,6 @@ class SelectionFragment : Fragment() {
         }
 
         var trackList = TrackList()
-
         for (track in audioList) {
             trackList.addTrack(Track(track.id, track.uri, track.title, track.artist, track.album, track.dateAdded, track.duration))
         }
@@ -324,6 +397,12 @@ class SelectionFragment : Fragment() {
         })
 
         viewModel.currentTrack.observe(viewLifecycleOwner, Observer {
+            viewModel.getMSession().setMetadata(MediaMetadataCompat.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, viewModel.currentTrack.value!!.title)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, viewModel.currentTrack.value!!.artist)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, viewModel.currentTrack.value!!.duration.toLong())
+                .build())
+
             if(builder == null){
                 Log.i(TAG, "Current track without builder object")
             } else {
@@ -336,6 +415,7 @@ class SelectionFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         viewModel.mediaPlayer.value!!.release()
+        viewModel.getMSession().release()
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(this.audioReceiver)
         notificationManager!!.cancelNotifications()
     }

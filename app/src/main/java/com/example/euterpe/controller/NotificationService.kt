@@ -16,7 +16,7 @@ import com.example.euterpe.adapter.MediaReceiver
 class NotificationService{
 
     companion object{
-        private val TAG = "Media Service"
+        private val TAG = "Notification Service"
         val ACTION_PLAY = "action_play"
         val ACTION_PAUSE = "action_pause"
         val ACTION_NEXT = "action_next"
